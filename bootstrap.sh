@@ -16,5 +16,6 @@ sudo apt-get -y install python-pip
 sudo pip install tornado
 sudo pip install pymongo
 sudo pip install requests
+sudo pip install apscheduler
 
 sudo service mongod start
