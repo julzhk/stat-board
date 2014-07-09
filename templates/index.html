@@ -6,7 +6,7 @@
     
     <body>
 
-    {% if data %}
+    {% if insta %}
         <div id="chart_div" style="width: 900px; height: 500px;"></div>
 
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -16,7 +16,9 @@
             function drawChart() {
                 var data = google.visualization.arrayToDataTable([
                     ['DateTime', 'VAMuseum'],
-                    {% for instadata in data['insta'] %}[ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],{% end %}
+                    {% for instadata in insta %}
+                    [ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],
+                    {% endfor %}
                 ]);
 
                 var options = {
@@ -31,7 +33,11 @@
                 chart.draw(data, options);
             }
         </script>
-    {% end %}
+    {% else %}
+
+        <h1>Need more data.</h1>
+
+    {% endif %}
 
     </body>
     

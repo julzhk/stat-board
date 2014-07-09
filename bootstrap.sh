@@ -17,5 +17,6 @@ sudo pip install tornado
 sudo pip install pymongo
 sudo pip install requests
 sudo pip install apscheduler
+sudo pip install Jinja2
 
 sudo service mongod start

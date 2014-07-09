@@ -4,10 +4,12 @@ import requests
 import config
 import atexit
 
+from os import path
 from apscheduler.scheduler import Scheduler
 from time import time
 from pymongo import Connection
 from tornado.options import define, options, parse_command_line
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 define("port", default=8080, help="run on the given port", type=int)
 
@@ -15,8 +17,33 @@ clients = []
 
 sched = Scheduler()
 
+class TemplateRendering:
+    """TemplateRendering
+       A simple class to hold methods for rendering templates.
+    """
 
-class IndexHandler(tornado.web.RequestHandler):
+    def render_template(self, template_name, variables):
+        """render_template
+            Returns the result of template.render to be used elsewhere. I think this will be useful to render templates to be passed into other templates.
+            Gets the template directory from app settings dictionary with a fall back to "templates" as a default.
+            Probably could use a default output if a template isn't found instead of throwing an exception.
+        """
+
+        template_dirs = []
+        template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
+
+        env = Environment(loader = FileSystemLoader(template_dirs))
+
+        try:
+            template = env.get_template(template_name)
+        except TemplateNotFound:
+            raise TemplateNotFound(template_name)
+        content = template.render(variables)
+        return content
+
+
+class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
+
     def get(self):
 
         con = Connection()
@@ -26,9 +53,11 @@ class IndexHandler(tornado.web.RequestHandler):
         data = {}
         data['insta'] = sm.find({"user_account": "vamuseum"})
 
-        self.render("templates/index.html",
-                    data=data)
+        # self.render("templates/index.html",
+        #             data=data)
 
+        content = self.render_template('index.html', data)
+        self.write(content)
 
 
 def instagram_counts(filter=None):
