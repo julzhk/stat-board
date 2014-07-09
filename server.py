@@ -6,7 +6,6 @@ import atexit
 
 from apscheduler.scheduler import Scheduler
 from time import time
-from datetime import datetime
 from pymongo import Connection
 from tornado.options import define, options, parse_command_line
 
@@ -16,9 +15,19 @@ clients = []
 
 sched = Scheduler()
 
+
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("templates/index.html")
+
+        con = Connection()
+        db = con.statboard
+        sm = db.socialmedia
+
+        data = {}
+        data['insta'] = sm.find({"user_account": "vamuseum"})
+
+        self.render("templates/index.html",
+                    data=data)
 
 
 
@@ -53,28 +62,26 @@ class Collector(tornado.web.RequestHandler):
 
         instagram_counts()
 
-        self.render("templates/index.html")
-
 
 class EventSchedule(tornado.web.RequestHandler):
     def get(self):
         sched.print_jobs()
 
-
-sched = Scheduler(daemon=True)
-atexit.register(lambda: sched.shutdown())
-sched.add_cron_job(instagram_counts, minute="*/15")
-# sched.add_cron_job(instagram_counts, minute="*/5", args=['blah'])
-
-sched.start()
-
-app = tornado.web.Application([
+handlers = tornado.web.Application([
     (r'/', IndexHandler),
     (r'/collect/(.*)', Collector),
     (r'/schedule', EventSchedule),
 ])
 
+
 if __name__ == '__main__':
     parse_command_line()
-    app.listen(options.port)
+    handlers.listen(options.port)
+
+    sched = Scheduler(daemon=True)
+    atexit.register(lambda: sched.shutdown())
+    sched.add_cron_job(instagram_counts, minute="*/5")
+    # sched.add_cron_job(instagram_counts, minute="*/5", args=['blah'])
+    sched.start()
+
     tornado.ioloop.IOLoop.instance().start()
