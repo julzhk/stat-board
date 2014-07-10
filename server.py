@@ -7,6 +7,8 @@ import requests
 import tornado.ioloop
 import tornado.web
 import config
+
+from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
 from pymongo import Connection
 from tornado.options import define, options, parse_command_line
@@ -53,11 +55,8 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = db.socialmedia
 
         data = {}
-        data['insta'] = sm.find({"user_account": "vamuseum"})
-
-        # self.render("templates/index.html",
-        #             data=data)
-
+        data['vamuseum'] = sm.find({"user_account": "vamuseum"})
+        data['insta'] = map_elements_for_chart(config.instagram_users, sm.find())
         content = self.render_template('index.html', data)
         self.write(content)
 
@@ -83,12 +82,10 @@ def instagram_counts(filter=None):
         }
 
         sm.insert(insert)
-    for stat in sm.find():
-        print stat
+
+    print "Instagram Imported."
 
     return True
-
-
 
 
 class Collector(tornado.web.RequestHandler):
