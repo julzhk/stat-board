@@ -41,7 +41,7 @@
     {% endif %}
 
     {% if vamuseum %}
-        <div id="vamuseum" style="width: 900px; height: 500px;"></div>
+        <div id="vamuseum" style="width: 250px; height: 50px; border: 1px solid #ccc;"></div>
 
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <script type="text/javascript">
@@ -56,12 +56,15 @@
                 ]);
 
                 var options = {
-                    title: '@vamuseum Instagram Followers',
-                    vAxis: {'title': 'Number of followers'},
-                    hAxis: {'title': 'DateTime', 'format': 'yyyy MM d HH:mm:ss'},
                     curveType: 'function',
                     interpolateNulls: true,
-                    legend: { position: 'bottom' }
+                    legend: { position: 'none' },
+                    axisTitlesPosition: 'none',
+                    titlePosition: 'none',
+                    hAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                    vAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                    tooltip: { trigger: 'none' },
+                    chartArea: {'width': '100%', 'height': '100%'},
                 };
 
                 var chart = new google.visualization.LineChart(document.getElementById('vamuseum'));

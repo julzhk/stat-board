@@ -55,7 +55,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = db.socialmedia
 
         data = {}
-        data['vamuseum'] = sm.find({"user_account": "vamuseum"})
+        data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(15)
         data['insta'] = map_elements_for_chart(config.instagram_users, sm.find())
         content = self.render_template('index.html', data)
         self.write(content)
