@@ -1,5 +1,4 @@
 __author__ = 'julz'
-from collections import OrderedDict
 def get_data_order(dataformatdef):
     """
     >>> get_data_order([{'name': 'V&A', 'user': 'vamuseum', 'id': '390861362'}])
@@ -44,6 +43,6 @@ def map_elements_for_chart(instagram_users=None, data=None):
         try:
             r[datum['datetime']][mycol] = datum['followers']
         except KeyError:
-            r[datum['datetime']] = [None] * nocolumns
+            r[datum['datetime']] = ["null"] * nocolumns
             r[datum['datetime']][mycol] = datum['followers']
     return convert_date_indexed_dict_to_list(r)
