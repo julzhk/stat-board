@@ -1,6 +1,6 @@
 # StatBoard
 
-Create new config.py
+Create new config.py (use config_template.py as template)
 - Add in API keys
 - Add in InstaUsers
 
