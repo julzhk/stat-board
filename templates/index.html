@@ -2,26 +2,79 @@
 <html>
     <head>
         <meta charset="utf-8">
+
+        <style>
+            .sparkline{ border: 1px solid #ccc; height: 50px; width: 250px; }
+        </style>
+
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script>
+            google.load("visualization", "1", {packages:["corechart"]});
+
+            var sparkline_options = {
+                curveType: 'function',
+                interpolateNulls: true,
+                legend: { position: 'none' },
+                axisTitlesPosition: 'none',
+                titlePosition: 'none',
+                hAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                vAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                tooltip: { trigger: 'none' },
+                chartArea: {'width': '100%', 'height': '100%'}
+            };
+
+            var sparkline_data = {}
+        </script>
     </head>
     
     <body>
 
-    {% if insta %}
+    {% if instaspark %}
+
+        {% for spark in instaspark %}
+
+            {{ spark.name }}:
+            <div id="spark_{{ loop.index0 }}" class="sparkline"></div>
+
+            <script>
+                sparkline_data.spark_{{ loop.index0 }} = google.visualization.arrayToDataTable([
+                    ['DateTime', '{{ spark.name }}'],
+                    {% for instadata in spark['data'] %}
+                    [ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],
+                    {% endfor %}
+                ]);
+            </script>
+
+        {% endfor %}
+
+        <script type="text/javascript">
+
+            google.setOnLoadCallback(drawCharts);
+            function drawCharts(){
+                Object.keys(sparkline_data).forEach(function(key){
+                    var chart = new google.visualization.LineChart(document.getElementById(key));
+                    chart.draw(sparkline_data[key], sparkline_options);
+                });
+            }
+
+        </script>
+
+    {% endif %}
+
+
+
+    {% if vamuseum %}
 
         <div id="instachart" style="width: 900px; height: 500px;"></div>
 
-        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <script type="text/javascript">
-            google.load("visualization", "1", {packages:["corechart"]});
+
             google.setOnLoadCallback(drawChart);
             function drawChart() {
                 var data = google.visualization.arrayToDataTable([
-                    ['DateTime', 'VAMuseum','34','34','te'],
-                    {% for instadata in insta %}
-                        [ new Date({{ instadata[0] }}*1000),
-                        {% for num in instadata[1:] %}
-                            {{ num }},
-                        {% endfor %}23],
+                    ['DateTime', 'VAMuseum'],
+                    {% for instadata in vamuseum %}
+                    [ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],
                     {% endfor %}
                 ]);
 
@@ -38,43 +91,6 @@
                 chart.draw(data, options);
             }
         </script>
-    {% endif %}
-
-    {% if vamuseum %}
-        <div id="vamuseum" style="width: 250px; height: 50px; border: 1px solid #ccc;"></div>
-
-        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-        <script type="text/javascript">
-            google.load("visualization", "1", {packages:["corechart"]});
-            google.setOnLoadCallback(drawChart);
-            function drawChart() {
-                var data = google.visualization.arrayToDataTable([
-                    ['DateTime', 'VAMuseum'],
-                    {% for instadata in vamuseum %}
-                    [ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],
-                    {% endfor %}
-                ]);
-
-                var options = {
-                    curveType: 'function',
-                    interpolateNulls: true,
-                    legend: { position: 'none' },
-                    axisTitlesPosition: 'none',
-                    titlePosition: 'none',
-                    hAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
-                    vAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
-                    tooltip: { trigger: 'none' },
-                    chartArea: {'width': '100%', 'height': '100%'},
-                };
-
-                var chart = new google.visualization.LineChart(document.getElementById('vamuseum'));
-                chart.draw(data, options);
-            }
-        </script>
-    {% else %}
-
-        <h1>Need more data.</h1>
-
     {% endif %}
 
     </body>
