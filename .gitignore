@@ -5,3 +5,7 @@
 /config.py
 
 *.pyc
+
+/.idea/
+
+/venv/
