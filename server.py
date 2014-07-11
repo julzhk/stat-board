@@ -7,6 +7,7 @@ import requests
 import tornado.ioloop
 import tornado.web
 import config
+import api_setup
 
 from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
@@ -79,7 +80,7 @@ def instagram_counts(filter=None):
     for instauser in config.instagram_users:
         r = requests.get(
             'https://api.instagram.com/v1/users/%s/?client_id=%s'
-            % (instauser['id'], config.instagram_client_id)
+            % (instauser['id'], api_setup.ig_client_id)
         )
         r = r.json()
 
