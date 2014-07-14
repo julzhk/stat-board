@@ -9,3 +9,10 @@ instagram_users = [
         'id'    : 'Instagram User ID'
     }
 ]
+
+twitter_users = [
+    {
+        'name'  : 'Name',
+        'user'  : 'Username'
+    }
+]
