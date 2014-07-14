@@ -15,7 +15,7 @@ sudo apt-get -y install python-pip
 
 sudo pip install tornado
 sudo pip install pymongo
-sudo pip install requests
+sudo pip install requests requests_oauthlib
 sudo pip install apscheduler
 sudo pip install Jinja2
 

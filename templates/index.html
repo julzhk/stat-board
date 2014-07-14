@@ -4,9 +4,9 @@
         <meta charset="utf-8">
 
         <style>
-            .panel{ border: 1px solid #ccc; padding: 0; width:25%;}
+            .panel{ border: 1px solid #ccc; float: left; margin: 0 1% 0 0; padding: 0; width:24%;}
             .panel h1{ background-color: #ccc; margin: 0; padding: 0.25em 0.5em;}
-            .panel h2{ margin: 0; padding: 0;}
+            .panel h2{ display: block; margin: 0; padding: 0;}
             .account{ margin: 0.5em 0; padding: 1em;}
             .sparkline{ border: 1px solid #ccc; height: 50px; width: 100%; }
         </style>
@@ -41,6 +41,44 @@
             <div class="account">
                 <h2>{{ spark.name }} ({{ spark.data[0]['user_account'] }})</h2>
 
+                <div class="sparkline" id="spark_{{ spark.data[0]['user_account'] }}"></div>
+
+                <span class="count">Followers: {{ spark.data[0]['followers'] }}</span>
+            </div>
+
+            <script>
+                sparkline_data.spark_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                    ['DateTime', '{{ spark.name }}'],
+                    {% for data in spark['data'] %}
+                    [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                    {% endfor %}
+                ]);
+            </script>
+
+        {% endfor %}
+
+        <script type="text/javascript">
+
+            google.setOnLoadCallback(drawCharts);
+            function drawCharts(){
+                Object.keys(sparkline_data).forEach(function(key){
+                    var chart = new google.visualization.LineChart(document.getElementById(key));
+                    chart.draw(sparkline_data[key], sparkline_options);
+                });
+            }
+
+        </script>
+    </div>
+    {% endif %}
+
+    {% if twitterspark %}
+    <div class="panel instagram">
+        <h1>Twitter</h1>
+        {% for spark in twitterspark %}
+
+            <div class="account">
+                <h2>{{ spark.name }} ({{ spark.data[0]['user_account'] }})</h2>
+
                 <div class="sparkline" id="spark_{{ loop.index0 }}"></div>
 
                 <span class="count">Followers: {{ spark.data[0]['followers'] }}</span>
@@ -49,8 +87,8 @@
             <script>
                 sparkline_data.spark_{{ loop.index0 }} = google.visualization.arrayToDataTable([
                     ['DateTime', '{{ spark.name }}'],
-                    {% for instadata in spark['data'] %}
-                    [ new Date({{ instadata['datetime'] }}*1000), {{ instadata['followers'] }}],
+                    {% for data in spark['data'] %}
+                    [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
                     {% endfor %}
                 ]);
             </script>

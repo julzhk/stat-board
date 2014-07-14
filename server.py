@@ -3,6 +3,7 @@ from os import path
 from time import time
 
 import requests
+from requests_oauthlib import OAuth1
 
 import tornado.ioloop
 import tornado.web
@@ -21,6 +22,14 @@ define("port", default=8080, help="run on the given port", type=int)
 clients = []
 
 sched = Scheduler()
+
+def get_oauth():
+    oauth = OAuth1(api_setup.tw_consumer_key,
+        client_secret=api_setup.tw_consumer_secret,
+        resource_owner_key=api_setup.tw_oauth_token,
+        resource_owner_secret=api_setup.tw_oauth_token_secret)
+
+    return oauth
 
 class TemplateRendering:
     """TemplateRendering
@@ -57,16 +66,25 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         db = con.statboard
         sm = db.socialmedia
 
-        data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
+        data['twitterspark'] = []
 
-        for instauser in config.instagram_users:
+        for user in config.instagram_users:
             data['instaspark'].append({
-                'name': instauser['name'],
-                'data': sm.find({"user_account": instauser['user']})
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
                           .sort("_id", -1)
                           .limit(40)
             })
+
+        for user in config.twitter_users:
+            data['twitterspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+
 
         content = self.render_template('index.html', data)
         self.write(content)
@@ -96,13 +114,38 @@ def instagram_counts(filter=None):
 
     print "Instagram Imported."
 
-    return True
+
+def twitter_counts(filter=None):
+
+    oauth = get_oauth()
+
+    con = Connection()
+    db = con.statboard
+    sm = db.socialmedia
+    # for stat in sm.find():
+    #     sm.remove(stat)
+    for twitteruser in config.twitter_users:
+        r = requests.get(
+            url="https://api.twitter.com/1.1/users/lookup.json?screen_name=%s" % twitteruser['user'],
+            auth=oauth)
+        r = r.json()
+
+        insert = {
+            'service': 'twitter',
+            'user_account': twitteruser['user'],
+            'datetime': int(time()),
+            'followers': int(r[0]['followers_count'])
+        }
+
+        sm.insert(insert)
+
+    print "Twitter Imported."
 
 
 class Collector(tornado.web.RequestHandler):
     def get(self, filter):
 
-        instagram_counts()
+        twitter_counts()
 
 
 class EventSchedule(tornado.web.RequestHandler):
@@ -123,6 +166,7 @@ if __name__ == '__main__':
     sched = Scheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
     sched.add_cron_job(instagram_counts, minute="*/5")
+    sched.add_cron_job(twitter_counts, minute="*/5")
     # sched.add_cron_job(instagram_counts, minute="*/5", args=['blah'])
     sched.start()
 
