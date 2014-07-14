@@ -12,6 +12,13 @@ import api_setup
 from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
 from pymongo import Connection
+from pymongo.errors import (AutoReconnect,
+                            ConfigurationError,
+                            ConnectionFailure,
+                            DocumentTooLarge,
+                            DuplicateKeyError,
+                            InvalidURI,
+                            OperationFailure)
 from tornado.options import define, options, parse_command_line
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
@@ -22,6 +29,18 @@ clients = []
 
 sched = Scheduler()
 
+def get_social_media_data():
+    try:
+        # on heroku
+        client = MongoClient(environ['MONGOLAB_URI'])
+        db = client.get_default_database()
+    except ConnectionFailure:
+        # locally
+        con = Connection()
+        db = con.statboard
+    return db.socialmedia
+
+
 class TemplateRendering:
     """TemplateRendering
        A simple class to hold methods for rendering templates.
@@ -29,11 +48,11 @@ class TemplateRendering:
 
     def render_template(self, template_name, variables):
         """render_template
-            Returns the result of template.render to be used elsewhere. I think this will be useful to render templates to be passed into other templates.
+            Returns the result of template.render to be used elsewhere.
+            I think this will be useful to render templates to be passed into other templates.
             Gets the template directory from app settings dictionary with a fall back to "templates" as a default.
             Probably could use a default output if a template isn't found instead of throwing an exception.
         """
-
         template_dirs = []
         template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
 
@@ -50,16 +69,10 @@ class TemplateRendering:
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
 
     def get(self):
-
         data = {}
-
-        con = Connection()
-        db = con.statboard
-        sm = db.socialmedia
-
+        sm = get_social_media_data()
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
-
         for instauser in config.instagram_users:
             data['instaspark'].append({
                 'name': instauser['name'],
@@ -67,15 +80,12 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
                           .sort("_id", -1)
                           .limit(40)
             })
-
         content = self.render_template('index.html', data)
         self.write(content)
 
 
 def instagram_counts(filter=None):
-    con = Connection()
-    db = con.statboard
-    sm = db.socialmedia
+    sm = get_social_media_data()
     # for stat in sm.find():
     #     sm.remove(stat)
     for instauser in config.instagram_users:
@@ -96,12 +106,9 @@ def instagram_counts(filter=None):
 
     print "Instagram Imported."
 
-    return True
-
 
 class Collector(tornado.web.RequestHandler):
     def get(self, filter):
-
         instagram_counts()
 
 
