@@ -51,11 +51,12 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
 
     def get(self):
 
+        data = {}
+
         con = Connection()
         db = con.statboard
         sm = db.socialmedia
 
-        data = {}
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
 
@@ -64,7 +65,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
                 'name': instauser['name'],
                 'data': sm.find({"user_account": instauser['user']})
                           .sort("_id", -1)
-                          .limit(20)
+                          .limit(40)
             })
 
         content = self.render_template('index.html', data)
