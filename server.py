@@ -29,7 +29,7 @@ def get_social_media_data():
         # on heroku
         client = MongoClient(environ['MONGOLAB_URI'])
         db = client.get_default_database()
-    except (ConnectionFailure, NameError, KeyError):
+    except (ConnectionFailure, KeyError, NameError):
         # locally
         con = Connection()
         db = con.statboard
@@ -74,6 +74,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = get_social_media_data()
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
+        data['twitterspark'] = []
         for user in config.instagram_users:
             data['instaspark'].append({
                 'name': user['name'],
