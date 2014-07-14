@@ -6,3 +6,4 @@ pymongo==2.7.1
 requests==2.3.0
 tornado==3.2.2
 wsgiref==0.1.2
+textblob==0.8.4
