@@ -1,5 +1,5 @@
 import atexit
-from os import path
+from os import path, environ
 from time import time
 
 import requests
@@ -12,7 +12,7 @@ import api_setup
 
 from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
-from pymongo import Connection
+from pymongo import Connection, MongoClient
 from pymongo.errors import ConnectionFailure
 from tornado.options import define, options, parse_command_line
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
@@ -29,7 +29,7 @@ def get_social_media_data():
         # on heroku
         client = MongoClient(environ['MONGOLAB_URI'])
         db = client.get_default_database()
-    except ConnectionFailure:
+    except (ConnectionFailure, NameError, KeyError):
         # locally
         con = Connection()
         db = con.statboard
