@@ -4,6 +4,7 @@ MarkupSafe==0.23
 backports.ssl-match-hostname==3.4.0.2
 pymongo==2.7.1
 requests==2.3.0
+requests_oauthlib==0.4.1
 tornado==3.2.2
 wsgiref==0.1.2
 textblob==0.8.4
