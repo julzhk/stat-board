@@ -18,5 +18,6 @@ sudo pip install pymongo
 sudo pip install requests requests_oauthlib
 sudo pip install apscheduler
 sudo pip install Jinja2
+sudo pip install google-api-python-client
 
 sudo service mongod start
