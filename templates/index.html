@@ -12,6 +12,7 @@
         </style>
 
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
         <script>
             google.load("visualization", "1", {packages:["corechart"]});
 
@@ -28,12 +29,14 @@
             };
 
             var sparkline_data = {}
+
+            $(window).resize(function(e){drawCharts()});
         </script>
     </head>
     
     <body>
 
-    {% if instaspark %}
+    {% if instaspark[0] %}
     <div class="panel instagram">
         <h1>Instagram</h1>
         {% for spark in instaspark %}
@@ -71,7 +74,7 @@
     </div>
     {% endif %}
 
-    {% if twitterspark %}
+    {% if twitterspark[0] %}
     <div class="panel instagram">
         <h1>Twitter</h1>
         {% for spark in twitterspark %}
@@ -116,7 +119,6 @@
         <div id="instachart" style="width: 900px; height: 500px;"></div>
 
         <script type="text/javascript">
-
             google.setOnLoadCallback(drawChart);
             function drawChart() {
                 var data = google.visualization.arrayToDataTable([
