@@ -10,7 +10,6 @@ import tornado.web
 import config
 import api_setup
 
-from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
 from pymongo import Connection, MongoClient
 from pymongo.errors import ConnectionFailure
