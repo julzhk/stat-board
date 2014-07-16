@@ -1,6 +1,7 @@
 import config
 from os import environ
 
+# Instagram
 try:
     ig_client_id = environ['instagram_client_id']
     ig_client_id = environ['instagram_client_src']
@@ -8,7 +9,7 @@ except (KeyError):
     ig_client_id = config.instagram_client_id
     ig_client_src = config.instagram_client_src
 
-
+# Twitter
 try:
     tw_request_token_url = environ['twitter_request_token_url']
     tw_authorise_url = environ['twitter_authorise_url']

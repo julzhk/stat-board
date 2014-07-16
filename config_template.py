@@ -1,13 +1,5 @@
 # These could/should be defined in environment variables. If they are, these lines should be removed
 
-# BEGIN GOOGLE ANALYTICS:
-ANALYTICS_CLIENT_ID = ''
-ANALYTICS_EMAIL_ADDRESS = ''
-ANALYTICS_CLIENT_SECRET = ''
-ANALYTICS_REDIRECT_URI = ''
-ANALYTICS_JAVASCRIPT_ORIGIN = ''
-# END GOOGLE ANALYTICS
-
 # BEGIN INSTAGRAM:
 instagram_client_id = ''
 instagram_client_src = ''
