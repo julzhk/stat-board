@@ -10,7 +10,6 @@ import tornado.web
 import config
 import api_setup
 
-from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
 from pymongo import Connection, MongoClient
 from pymongo.errors import ConnectionFailure
@@ -24,6 +23,7 @@ clients = []
 
 sched = Scheduler()
 
+
 def get_social_media_data():
     try:
         # on heroku
@@ -35,12 +35,15 @@ def get_social_media_data():
         db = con.statboard
     return db.socialmedia
 
+
 def get_oauth():
     oauth = OAuth1(api_setup.tw_consumer_key,
-        client_secret=api_setup.tw_consumer_secret,
-        resource_owner_key=api_setup.tw_oauth_token,
-        resource_owner_secret=api_setup.tw_oauth_token_secret)
+                   client_secret=api_setup.tw_consumer_secret,
+                   resource_owner_key=api_setup.tw_oauth_token,
+                   resource_owner_secret=api_setup.tw_oauth_token_secret
+                   )
     return oauth
+
 
 class TemplateRendering:
     """TemplateRendering
@@ -55,9 +58,10 @@ class TemplateRendering:
             Probably could use a default output if a template isn't found instead of throwing an exception.
         """
         template_dirs = []
-        template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
+        # added a default for fail over.
+        template_dirs.append(path.join(path.dirname(__file__), 'templates'))
 
-        env = Environment(loader = FileSystemLoader(template_dirs))
+        env = Environment(loader=FileSystemLoader(template_dirs))
 
         try:
             template = env.get_template(template_name)
