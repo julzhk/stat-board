@@ -8,4 +8,5 @@ requests_oauthlib==0.4.1
 tornado==3.2.2
 wsgiref==0.1.2
 textblob==0.8.4
+requests-oauthlib==0.4.1
 google-api-python-client==1.2
