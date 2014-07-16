@@ -1,5 +1,5 @@
-from fabric.api import run
+from fabric.api import local
 
 def deploy_live():
     print 'deploy'
-    run("uname -a")
+    local("uname -a")
