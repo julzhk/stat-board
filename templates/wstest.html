@@ -80,6 +80,44 @@
     </div>
     {% endif %}
 
+    {% if twitterspark %}
+    <div class="panel twitter">
+        <h1>Twitter</h1>
+        {% for spark in twitterspark %}
+
+            <div class="account" id="twitter_{{ spark.data[0]['user_account'] }}">
+                <h2>{{ spark.name }} ({{ spark.data[0]['user_account'] }})</h2>
+
+                <div class="sparkline" id="spark_twitter_{{ spark.data[0]['user_account'] }}"></div>
+
+                <span class="count">Followers: <span>{{ spark.data[0]['followers'] }}</span></span>
+            </div>
+
+            <script>
+                sparkline_data.spark_twitter_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                    ['DateTime', '{{ spark.name }}'],
+                    {% for data in spark['data'] %}
+                    [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                    {% endfor %}
+                ]);
+            </script>
+
+        {% endfor %}
+
+        <script type="text/javascript">
+
+            google.setOnLoadCallback(drawCharts);
+            function drawCharts(){
+                Object.keys(sparkline_data).forEach(function(key){
+                    var chart = new google.visualization.LineChart(document.getElementById(key));
+                    chart.draw(sparkline_data[key], sparkline_options);
+                });
+            }
+
+        </script>
+    </div>
+    {% endif %}
+
     <div id="output">
 
     </div>

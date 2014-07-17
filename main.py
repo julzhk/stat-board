@@ -68,10 +68,8 @@ def get_oauth():
     return oauth
 
 
-def instagram_counts(filter=None):
+def instagram_counts():
     sm = get_social_media_data()
-    # for stat in sm.find():
-    #     sm.remove(stat)
     for instauser in config.instagram_users:
         r = requests.get(
             'https://api.instagram.com/v1/users/%s/?client_id=%s'
@@ -88,6 +86,25 @@ def instagram_counts(filter=None):
         send_message(insert)
 
     print "Instagram Imported."
+
+
+def twitter_counts():
+    oauth = get_oauth()
+    sm = get_social_media_data()
+    for twitteruser in config.twitter_users:
+        r = requests.get(
+            url="https://api.twitter.com/1.1/users/lookup.json?screen_name=%s" % twitteruser['user'],
+            auth=oauth)
+        r = r.json()
+        insert = {
+            'service': 'twitter',
+            'user_account': twitteruser['user'],
+            'datetime': int(time()),
+            'followers': int(r[0]['followers_count'])
+        }
+        sm.insert(insert)
+        send_message(insert)
+    print "Twitter Imported."
 
 
 class TemplateRendering:
@@ -113,8 +130,16 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = get_social_media_data()
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
+        data['twitterspark'] = []
         for user in config.instagram_users:
             data['instaspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.twitter_users:
+            data['twitterspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user']})
                           .sort("_id", -1)
@@ -164,6 +189,7 @@ if __name__ == '__main__':
     sched = Scheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
     sched.add_cron_job(instagram_counts, minute="*/1")
+    sched.add_cron_job(twitter_counts, minute="*/1")
     #sched.add_cron_job(send_message, second="*/30")
     sched.start()
 
