@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+
+        <style>
+            #output{ clear: both; padding-top: 1em;}
+            .panel{ border: 1px solid #ccc; float: left; margin: 0 1% 0 0; padding: 0; width:24%;}
+            .panel h1{ background-color: #ccc; margin: 0; padding: 0.25em 0.5em;}
+            .panel h2{ display: block; margin: 0; padding: 0;}
+            .account{ margin: 0.5em 0; padding: 1em;}
+            .sparkline{ border: 1px solid #ccc; height: 50px; width: 100%; }
+        </style>
+
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script>
+            google.load("visualization", "1", {packages:["corechart"]});
+
+            var sparkline_options = {
+                curveType: 'function',
+                interpolateNulls: true,
+                legend: { position: 'none' },
+                axisTitlesPosition: 'none',
+                titlePosition: 'none',
+                hAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                vAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
+                tooltip: { trigger: 'none' },
+                animation:{
+                    duration: 1000,
+                    easing: 'out',
+                },
+                chartArea: {'width': '100%', 'height': '100%'}
+            };
+
+            var sparkline_data = {}
+
+            $(window).resize(function(e){drawCharts()});
+        </script>
+
+    </head>
+    
+    <body>
+
+    {% if instaspark %}
+    <div class="panel instagram">
+        <h1>Instagram</h1>
+        {% for spark in instaspark %}
+
+            <div class="account" id="instagram_{{ spark.data[0]['user_account'] }}">
+                <h2>{{ spark.name }} ({{ spark.data[0]['user_account'] }})</h2>
+
+                <div class="sparkline" id="spark_instagram_{{ spark.data[0]['user_account'] }}"></div>
+
+                <span class="count">Followers: <span>{{ spark.data[0]['followers'] }}</span></span>
+            </div>
+
+            <script>
+                sparkline_data.spark_instagram_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                    ['DateTime', '{{ spark.name }}'],
+                    {% for data in spark['data'] %}
+                    [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                    {% endfor %}
+                ]);
+            </script>
+
+        {% endfor %}
+
+        <script type="text/javascript">
+
+            google.setOnLoadCallback(drawCharts);
+            function drawCharts(){
+                Object.keys(sparkline_data).forEach(function(key){
+                    var chart = new google.visualization.LineChart(document.getElementById(key));
+                    chart.draw(sparkline_data[key], sparkline_options);
+                });
+            }
+
+        </script>
+    </div>
+    {% endif %}
+
+    <div id="output">
+
+    </div>
+
+    <script>
+
+        var messageContainer = document.getElementById("output");
+        var ws = '';
+        var row = 1;
+        openWebSocket();
+
+        function openWebSocket(){
+            if ("WebSocket" in window) {
+                messageContainer.innerHTML = "WebSocket are supported by your Browser!";
+                url = "ws://127.0.0.1:8080/ws/";
+                ws = new WebSocket(url);
+                ws.onopen = function() {
+                    messageContainer.innerHTML = 'connected';
+                };
+                ws.onmessage = function (evt) {
+                    var received_msg = evt.data;
+                    messageContainer.innerHTML = messageContainer.innerHTML + '<br />' + received_msg;
+                    data = jQuery.parseJSON(received_msg);
+
+                    // Update follower count below sparkline
+                    $('#' + data.service + "_" + data.user_account + " .count span").text(data.followers)
+
+                    var spark_ref = "spark_" + data.service + "_" + data.user_account;
+
+                    if(sparkline_data[spark_ref].getNumberOfRows <=40){
+                        sparkline_data[spark_ref].removeRow(39);
+                    }
+                    sparkline_data[spark_ref].insertRows(0, [[new Date(data.datetime*1000), data.followers]])
+
+                    drawCharts()
+                };
+                ws.onclose = function() {
+                    messageContainer.innerHTML = "Connection is closed...";
+                };
+            } else {
+                messageContainer.innerHTML = "WebSocket are NOT supported by your Browser. :-(";
+            }
+        }
+    </script>
+
+    </body>
+    
+
+</html>
