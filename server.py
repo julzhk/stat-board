@@ -16,13 +16,9 @@ from pymongo.errors import ConnectionFailure
 from tornado.options import define, options, parse_command_line
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
-
 define("port", default=8080, help="run on the given port", type=int)
-
 clients = []
-
 sched = Scheduler()
-
 
 def get_social_media_data():
     try:
@@ -71,30 +67,38 @@ class TemplateRendering:
         return content
 
 
+class TestHandler(tornado.web.RequestHandler, TemplateRendering):
+    def get(self):
+        self.write('test')
+
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
 
     def get(self):
-        data = {}
-        sm = get_social_media_data()
-        data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
-        data['instaspark'] = []
-        data['twitterspark'] = []
-        for user in config.instagram_users:
-            data['instaspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user']})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.twitter_users:
-            data['twitterspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user']})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        content = self.render_template('index.html', data)
-        self.write(content)
+        try:
+            data = {}
+            sm = get_social_media_data()
+            data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
+            data['instaspark'] = []
+            data['twitterspark'] = []
+            for user in config.instagram_users:
+                data['instaspark'].append({
+                    'name': user['name'],
+                    'data': sm.find({"user_account": user['user']})
+                              .sort("_id", -1)
+                              .limit(40)
+                })
+            for user in config.twitter_users:
+                data['twitterspark'].append({
+                    'name': user['name'],
+                    'data': sm.find({"user_account": user['user']})
+                              .sort("_id", -1)
+                              .limit(40)
+                })
+            content = self.render_template('index.html', data)
+            self.write(content)
+        except Exception as err:
+            self.write(err)
+
 
 
 def instagram_counts(filter=None):
@@ -148,6 +152,7 @@ class EventSchedule(tornado.web.RequestHandler):
 
 handlers = tornado.web.Application([
     (r'/', IndexHandler),
+    (r'/test', TestHandler),
     (r'/collect/(.*)', Collector),
     (r'/schedule', EventSchedule),
 ])
