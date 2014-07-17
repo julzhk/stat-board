@@ -1,5 +1,5 @@
 import atexit
-from os import path
+from os import path, environ
 from time import time
 
 import requests
@@ -10,9 +10,8 @@ import tornado.web
 import config
 import api_setup
 
-from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
-from pymongo import Connection
+from pymongo import Connection, MongoClient
 from pymongo.errors import ConnectionFailure
 from tornado.options import define, options, parse_command_line
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
