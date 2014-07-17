@@ -1,5 +1,5 @@
 import atexit
-from os import path, environ
+from os import path
 from time import time
 
 import requests
@@ -10,14 +10,18 @@ import tornado.web
 import config
 import api_setup
 
+from lib import map_elements_for_chart
 from apscheduler.scheduler import Scheduler
-from pymongo import Connection, MongoClient
+from pymongo import Connection
 from pymongo.errors import ConnectionFailure
 from tornado.options import define, options, parse_command_line
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
+
 define("port", default=8080, help="run on the given port", type=int)
+
 clients = []
+
 sched = Scheduler()
 
 def get_social_media_data():
@@ -25,21 +29,18 @@ def get_social_media_data():
         # on heroku
         client = MongoClient(environ['MONGOLAB_URI'])
         db = client.get_default_database()
-    except (ConnectionFailure, KeyError, NameError):
+    except ConnectionFailure:
         # locally
         con = Connection()
         db = con.statboard
     return db.socialmedia
 
-
 def get_oauth():
     oauth = OAuth1(api_setup.tw_consumer_key,
-                   client_secret=api_setup.tw_consumer_secret,
-                   resource_owner_key=api_setup.tw_oauth_token,
-                   resource_owner_secret=api_setup.tw_oauth_token_secret
-                   )
+        client_secret=api_setup.tw_consumer_secret,
+        resource_owner_key=api_setup.tw_oauth_token,
+        resource_owner_secret=api_setup.tw_oauth_token_secret)
     return oauth
-
 
 class TemplateRendering:
     """TemplateRendering
@@ -54,10 +55,9 @@ class TemplateRendering:
             Probably could use a default output if a template isn't found instead of throwing an exception.
         """
         template_dirs = []
-        # added a default for fail over.
-        template_dirs.append(path.join(path.dirname(__file__), 'templates'))
+        template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
 
-        env = Environment(loader=FileSystemLoader(template_dirs))
+        env = Environment(loader = FileSystemLoader(template_dirs))
 
         try:
             template = env.get_template(template_name)
@@ -67,38 +67,29 @@ class TemplateRendering:
         return content
 
 
-class TestHandler(tornado.web.RequestHandler, TemplateRendering):
-    def get(self):
-        self.write('test')
-
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
 
     def get(self):
-        try:
-            data = {}
-            sm = get_social_media_data()
-            data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
-            data['instaspark'] = []
-            data['twitterspark'] = []
-            for user in config.instagram_users:
-                data['instaspark'].append({
-                    'name': user['name'],
-                    'data': sm.find({"user_account": user['user']})
-                              .sort("_id", -1)
-                              .limit(40)
-                })
-            for user in config.twitter_users:
-                data['twitterspark'].append({
-                    'name': user['name'],
-                    'data': sm.find({"user_account": user['user']})
-                              .sort("_id", -1)
-                              .limit(40)
-                })
-            content = self.render_template('index.html', data)
-            self.write(content)
-        except Exception as err:
-            self.write(err)
-
+        data = {}
+        sm = get_social_media_data()
+        data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
+        data['instaspark'] = []
+        for user in config.instagram_users:
+            data['instaspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.twitter_users:
+            data['twitterspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        content = self.render_template('index.html', data)
+        self.write(content)
 
 
 def instagram_counts(filter=None):
@@ -152,7 +143,6 @@ class EventSchedule(tornado.web.RequestHandler):
 
 handlers = tornado.web.Application([
     (r'/', IndexHandler),
-    (r'/test', TestHandler),
     (r'/collect/(.*)', Collector),
     (r'/schedule', EventSchedule),
 ])
