@@ -20,23 +20,8 @@
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
         <script>
-            google.load("visualization", "1", {packages:["corechart"]});
-
-            var sparkline_options = {
-                curveType: 'function',
-                interpolateNulls: true,
-                legend: { position: 'none' },
-                axisTitlesPosition: 'none',
-                titlePosition: 'none',
-                hAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
-                vAxis: { 'baselineColor': 'none', 'textPosition': 'none', 'gridlines': {'count': 0} },
-                tooltip: { trigger: 'none' },
-                chartArea: {'width': '100%', 'height': '100%'}
-            };
-
-            var sparkline_data = {}
-
-            $(window).resize(function(e){drawCharts()});
+            var sparkline_data = {};
+            google.load("visualization", "1", { packages: ["corechart"] });
         </script>
 
     </head>
@@ -56,8 +41,7 @@
                     <script>
                         sparkline_data.spark_instagram_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
                             ['DateTime', '{{ spark.name }}'],
-                            {% for data in spark['data'] %}
-                            [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
                             {% endfor %}
                         ]);
                     </script>
@@ -69,18 +53,6 @@
             <div class="account">
                 <p>Last updated: <span id="last_updated"></span></p>
             </div>
-
-            <script type="text/javascript">
-
-                google.setOnLoadCallback(drawCharts);
-                function drawCharts(){
-                    Object.keys(sparkline_data).forEach(function(key){
-                        var chart = new google.visualization.LineChart(document.getElementById(key));
-                        chart.draw(sparkline_data[key], sparkline_options);
-                    });
-                }
-
-            </script>
         </div>
         {% endif %}
 
@@ -98,84 +70,25 @@
                     <script>
                         sparkline_data.spark_twitter_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
                             ['DateTime', '{{ spark.name }}'],
-                            {% for data in spark['data'] %}
-                            [ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
                             {% endfor %}
                         ]);
                     </script>
                 </div>
-
             {% endfor %}
 
             <div class="account">
                 <p>Last updated: <span id="last_updated"></span></p>
             </div>
-
-            <script type="text/javascript">
-
-                google.setOnLoadCallback(drawCharts);
-                function drawCharts(){
-                    Object.keys(sparkline_data).forEach(function(key){
-                        var chart = new google.visualization.LineChart(document.getElementById(key));
-                        chart.draw(sparkline_data[key], sparkline_options);
-                    });
-                }
-
-            </script>
         </div>
         {% endif %}
 
-    <div id="output">
+        <div id="output">
 
-    </div>
-
-    <script>
-
-        var messageContainer = document.getElementById("output");
-        var ws = '';
-        var row = 1;
-        openWebSocket();
-
-        function openWebSocket(){
-            if ("WebSocket" in window) {
-                messageContainer.innerHTML = "WebSocket are supported by your Browser!";
-                url = "ws://127.0.0.1:8080/ws/";
-                ws = new WebSocket(url);
-                ws.onopen = function() {
-                    messageContainer.innerHTML = 'connected';
-                };
-                ws.onmessage = function (evt) {
-                    var received_msg = evt.data;
-                    messageContainer.innerHTML = messageContainer.innerHTML + '<br />' + received_msg;
-                    data = jQuery.parseJSON(received_msg);
-
-                    d = new Date(data.datetime*1000);
-                    var curr_hour = d.getHours();
-                    var curr_min = d.getMinutes();
-
-                    // Update follower count below sparkline
-                    $('#' + data.service + "_" + data.user_account + " .count").text(data.followers)
-                    $('.' + data.service + " #last_updated").text(curr_hour + ":" + curr_min);
-
-                    var spark_ref = "spark_" + data.service + "_" + data.user_account;
-
-                    if(sparkline_data[spark_ref].getNumberOfRows <=40){
-                        sparkline_data[spark_ref].removeRow(39);
-                    }
-                    sparkline_data[spark_ref].insertRows(0, [[new Date(data.datetime*1000), data.followers]])
-
-                    drawCharts()
-                };
-                ws.onclose = function() {
-                    messageContainer.innerHTML = "Connection is closed...";
-                };
-            } else {
-                messageContainer.innerHTML = "WebSocket are NOT supported by your Browser. :-(";
-            }
-        }
-    </script>
+        </div>
 
     </body>
-    
+
+    <script type="text/javascript" src="/assets/script.js"></script>
 
 </html>

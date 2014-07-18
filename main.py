@@ -179,6 +179,7 @@ def send_message(message=None):
 
 app = tornado.web.Application([
     (r'/', IndexHandler),
+    (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
     (r'/ws/', WebSocketHandler),
 ])
 
