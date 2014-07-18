@@ -16,3 +16,4 @@
 
 .panel.wordpress .thumbnail_image{ border: 1px solid #ccc; clear:both; height: 100px; width: 100%; overflow: hidden; background-size: cover; background-position: center }
 .panel.wordpress .account:nth-child(n+2) .thumbnail_image{ display: none}
+time{ display: block; clear: both;}
