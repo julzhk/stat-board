@@ -6,35 +6,36 @@ from apscheduler.scheduler import Scheduler
 import json
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from os import path, environ
-from time import gmtime, strftime, time
-import tornado.ioloop
-import tornado.web
-from tornado import websocket
-from tornado.websocket import WebSocketClosedError
-from tornado.options import define, options, parse_command_line
-from pymongo import Connection, MongoClient
-from pymongo.errors import ConnectionFailure
+
 import requests
 from requests_oauthlib import OAuth1
+import tornado.ioloop
+import tornado.web
+import tornado.httpserver
+import config
+import api_setup
 
+from apscheduler.scheduler import Scheduler
+from pymongo import Connection, MongoClient
+from pymongo.errors import ConnectionFailure
+from tornado.options import define, options, parse_command_line
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+import logging
+from time import gmtime, strftime, time
+from tornado import websocket
+from tornado.websocket import WebSocketClosedError
 import random
 
-define("port", default=8080, help="run on the given port", type=int)
-sched = Scheduler()
 
 # List of all the clients connected via websockets
 clients = []
+# sched = Scheduler()
 
 
 def get_social_media_data():
-    try:
-        # on heroku
-        client = MongoClient(environ['MONGOLAB_URI'])
-        db = client.get_default_database()
-    except (ConnectionFailure, KeyError, NameError):
-        # locally
-        con = Connection()
-        db = con.statboard
+    # on heroku
+    client = MongoClient(environ['MONGOLAB_URI'])
+    db = client.get_default_database()
     return db.socialmedia
 
 
@@ -45,28 +46,6 @@ def get_oauth():
                    resource_owner_secret=api_setup.tw_oauth_token_secret
                    )
     return oauth
-
-
-def get_social_media_data():
-    try:
-        # on heroku
-        client = MongoClient(environ['MONGOLAB_URI'])
-        db = client.get_default_database()
-    except (ConnectionFailure, KeyError, NameError):
-        # locally
-        con = Connection()
-        db = con.statboard
-    return db.socialmedia
-
-
-def get_oauth():
-    oauth = OAuth1(api_setup.tw_consumer_key,
-                   client_secret=api_setup.tw_consumer_secret,
-                   resource_owner_key=api_setup.tw_oauth_token,
-                   resource_owner_secret=api_setup.tw_oauth_token_secret
-                   )
-    return oauth
-
 
 def instagram_counts():
     sm = get_social_media_data()
@@ -111,10 +90,9 @@ class TemplateRendering:
 
     def render_template(self, template_name, variables):
         template_dirs = []
-        # added a default for fail over.
-        template_dirs.append(path.join(path.dirname(__file__), 'templates'))
+        template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
 
-        env = Environment(loader=FileSystemLoader(template_dirs))
+        env = Environment(loader = FileSystemLoader(template_dirs))
 
         try:
             template = env.get_template(template_name)
@@ -123,6 +101,10 @@ class TemplateRendering:
         content = template.render(variables)
         return content
 
+
+class TestHandler(tornado.web.RequestHandler, TemplateRendering):
+    def get(self):
+        self.write('test')
 
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
     def get(self):
@@ -175,23 +157,26 @@ def send_message(message=None):
             clients.remove(client)
             print 'Client exited'
 
+def main():
+    application = tornado.web.Application([
 
-
-app = tornado.web.Application([
-    (r'/', IndexHandler),
-    (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
-    (r'/ws/', WebSocketHandler),
-])
-
-if __name__ == '__main__':
-    parse_command_line()
-    app.listen(options.port)
-
+        (r'/', IndexHandler),
+        (r'/test', TestHandler),
+        (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
+        (r'/ws/', WebSocketHandler),
+    ])
+    http_server = tornado.httpserver.HTTPServer(application)
+    port = int(environ.get("PORT", 5000))
+    http_server.listen(port)
+    tornado.ioloop.IOLoop.instance().start()
     sched = Scheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
-    sched.add_cron_job(instagram_counts, minute="*/1")
-    sched.add_cron_job(twitter_counts, minute="*/1")
-    #sched.add_cron_job(send_message, second="*/30")
+    sched.add_cron_job(instagram_counts, minute="*/5")
+    sched.add_cron_job(twitter_counts, mi1nute="*/5")
+    # sched.add_cron_job(instagram_counts, minute="*/5", args=['blah'])
     sched.start()
 
-    tornado.ioloop.IOLoop.instance().start()
+
+if __name__ == "__main__":
+    main()
+
