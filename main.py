@@ -1,41 +1,36 @@
 import api_setup
 import config
-from collections import OrderedDict
 import atexit
 from apscheduler.scheduler import Scheduler
 import json
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from os import path, environ
-
-import requests
-from requests_oauthlib import OAuth1
+from time import gmtime, strftime, time
 import tornado.ioloop
 import tornado.web
+import tornado.websocket
 import tornado.httpserver
-import config
-import api_setup
-
-from apscheduler.scheduler import Scheduler
-from pymongo import Connection, MongoClient
-from pymongo.errors import ConnectionFailure
-from tornado.options import define, options, parse_command_line
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-import logging
-from time import gmtime, strftime, time
-from tornado import websocket
 from tornado.websocket import WebSocketClosedError
+from tornado.options import define, options, parse_command_line
+from pymongo import Connection, MongoClient
+import requests
+from requests_oauthlib import OAuth1
 import random
 
+define("port", default=8080, help="run on the given port", type=int)
 
 # List of all the clients connected via websockets
 clients = []
-# sched = Scheduler()
+sched = Scheduler()
 
 
 def get_social_media_data():
-    # on heroku
-    client = MongoClient(environ['MONGOLAB_URI'])
-    db = client.get_default_database()
+    try:
+        client = MongoClient(environ['MONGOLAB_URI'])
+        db = client.get_default_database()
+    except:
+        con = Connection()
+        db = con.statboard
     return db.socialmedia
 
 
@@ -106,6 +101,7 @@ class TestHandler(tornado.web.RequestHandler, TemplateRendering):
     def get(self):
         self.write('test')
 
+
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
     def get(self):
         data = {}
@@ -132,7 +128,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         self.write(content)
 
 
-class WebSocketHandler(websocket.WebSocketHandler):
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, *args):
         clients.append(self)
         print "New web socket connection: %s" % self
@@ -157,26 +153,27 @@ def send_message(message=None):
             clients.remove(client)
             print 'Client exited'
 
-def main():
-    application = tornado.web.Application([
 
+def main():
+
+    application = tornado.web.Application([
         (r'/', IndexHandler),
         (r'/test', TestHandler),
         (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
         (r'/ws/', WebSocketHandler),
     ])
-    http_server = tornado.httpserver.HTTPServer(application)
-    port = int(environ.get("PORT", 5000))
-    http_server.listen(port)
-    tornado.ioloop.IOLoop.instance().start()
+
+    parse_command_line()
+    application.listen(options.port)
+
     sched = Scheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
-    sched.add_cron_job(instagram_counts, minute="*/5")
-    sched.add_cron_job(twitter_counts, mi1nute="*/5")
-    # sched.add_cron_job(instagram_counts, minute="*/5", args=['blah'])
+    sched.add_cron_job(instagram_counts, minute="*/1")
+    sched.add_cron_job(twitter_counts, minute="*/1")
     sched.start()
+
+    tornado.ioloop.IOLoop.instance().start()
 
 
 if __name__ == "__main__":
     main()
-
