@@ -28,7 +28,8 @@ var messageContainer = $('.output'),
             'width': '100%',
             'height': '100%'
         }
-    };
+    },
+    reconnect_in = 2;
 
 openWebSocket();
 google.setOnLoadCallback(drawCharts);
@@ -56,8 +57,11 @@ function openWebSocket() {
 
         messageContainer.html('WebSocket are supported by your Browser!');
 
+        console.log(ws.readyState);
         ws.onopen = function () {
             messageContainer.html('Connected');
+            console.log(ws.readyState);
+            reconnect_in = 2;
         };
 
         ws.onmessage = function (evt) {
@@ -83,7 +87,16 @@ function openWebSocket() {
         };
 
         ws.onclose = function () {
-            messageContainer.html('Connection is closed...');
+            messageContainer.html('Lost connection with the server. Attempting reconnect in ' + reconnect_in + ' seconds.');
+            setTimeout(function() {
+                openWebSocket();
+            }, reconnect_in * 1000);
+            reconnect_in = reconnect_in * 2;
+        };
+
+        ws.onerror = function(err) {
+            console.error('Socket encountered error: ', err.message, 'Closing socket');
+            ws.close();
         };
 
     } else {
