@@ -13,6 +13,7 @@ sudo apt-get -y install libxml2-dev libxslt1-dev python-dev
 sudo wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | python
 sudo apt-get -y install python-pip
 
+wget -qO- https://toolbelt.heroku.com/install-ubuntu.sh | sh
 sudo pip install tornado
 sudo pip install pymongo
 sudo pip install requests requests_oauthlib
