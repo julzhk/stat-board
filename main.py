@@ -1,4 +1,3 @@
-import api_setup
 import config
 import atexit
 from apscheduler.scheduler import Scheduler
@@ -35,19 +34,19 @@ def get_social_media_data():
 
 
 def get_oauth():
-    oauth = OAuth1(api_setup.tw_consumer_key,
-                   client_secret=api_setup.tw_consumer_secret,
-                   resource_owner_key=api_setup.tw_oauth_token,
-                   resource_owner_secret=api_setup.tw_oauth_token_secret
+    oauth = OAuth1(environ['TWITTER_CONSUMER_KEY'],
+                   client_secret=environ['TWITTER_CONSUMER_SECRET'],
+                   resource_owner_key=environ['TWITTER_OAUTH_TOKEN'],
+                   resource_owner_secret=environ['TWITTER_OAUTH_TOKEN_SECRET']
                    )
     return oauth
 
 def instagram_counts():
     sm = get_social_media_data()
-    for instauser in config.instagram_users:
+    for instauser in config.INSTAGRAM_USERS:
         r = requests.get(
             'https://api.instagram.com/v1/users/%s/?client_id=%s'
-            % (instauser['id'], api_setup.ig_client_id)
+            % (instauser['id'], environ['INSTAGRAM_CLIENT_ID'])
         )
         r = r.json()
         insert = {
@@ -65,7 +64,7 @@ def instagram_counts():
 def twitter_counts():
     oauth = get_oauth()
     sm = get_social_media_data()
-    for twitteruser in config.twitter_users:
+    for twitteruser in config.TWITTER_USERS:
         r = requests.get(
             url="https://api.twitter.com/1.1/users/lookup.json?screen_name=%s" % twitteruser['user'],
             auth=oauth)
@@ -109,14 +108,14 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
         data['twitterspark'] = []
-        for user in config.instagram_users:
+        for user in config.INSTAGRAM_USERS:
             data['instaspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user']})
                           .sort("_id", -1)
                           .limit(40)
             })
-        for user in config.twitter_users:
+        for user in config.TWITTER_USERS:
             data['twitterspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user']})
