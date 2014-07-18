@@ -1,4 +1,4 @@
-var messageContainer = document.getElementById("output"),
+var messageContainer = $('.output'),
     sparkline_options = {
         curveType: 'function',
         interpolateNulls: true,
@@ -32,12 +32,15 @@ var messageContainer = document.getElementById("output"),
 
 openWebSocket();
 google.setOnLoadCallback(drawCharts);
+recentBlogPosts();
+var blog = window.setInterval(recentBlogPosts, 10000);
 
 // Make sure that graphs resize nicely with the window.
 $(window).resize(function () {
     drawCharts();
 });
 
+// Draw out Google Charts
 function drawCharts() {
     Object.keys(sparkline_data).forEach(function (key) {
         var chart = new google.visualization.LineChart(document.getElementById(key));
@@ -45,16 +48,16 @@ function drawCharts() {
     });
 }
 
+// Look after the WebSockets connection and messages
 function openWebSocket() {
-
     if ("WebSocket" in window) {
         var url = "ws://127.0.0.1:8080/ws/",
             ws = new WebSocket(url);
 
-        messageContainer.innerHTML = "WebSocket are supported by your Browser!";
+        messageContainer.html('WebSocket are supported by your Browser!');
 
         ws.onopen = function () {
-            messageContainer.innerHTML = 'connected';
+            messageContainer.html('Connected');
         };
 
         ws.onmessage = function (evt) {
@@ -65,11 +68,11 @@ function openWebSocket() {
                 curr_min = d.getMinutes(),
                 spark_ref = "spark_" + data.service + "_" + data.user_account;
 
-            messageContainer.innerHTML = messageContainer.innerHTML + '<br />' + received_msg;
+            messageContainer.html(messageContainer.html() + '<br />' + received_msg);
 
             // Update follower count below sparkline
-            $('#' + data.service + "_" + data.user_account + " .count").text(data.followers);
-            $('.' + data.service + " #last_updated").text(curr_hour + ":" + curr_min);
+            $('#' + data.service + "_" + data.user_account + " .count").html(data.followers);
+            $('.' + data.service + " #last_updated").html(curr_hour + ":" + curr_min);
 
             if (sparkline_data[spark_ref].getNumberOfRows <= 40) {
                 sparkline_data[spark_ref].removeRow(39);
@@ -80,11 +83,35 @@ function openWebSocket() {
         };
 
         ws.onclose = function () {
-            messageContainer.innerHTML = "Connection is closed...";
+            messageContainer.html('Connection is closed...');
         };
 
     } else {
-        messageContainer.innerHTML = "WebSocket are NOT supported by your Browser. :-(";
+        messageContainer.html('WebSocket are NOT supported by your Browser.');
     }
+}
 
+function recentBlogPosts() {
+
+    $.getJSON( "http://www.vam.ac.uk/blog/api/get_recent_posts/", function( data ) {
+        var items = [];
+        $.each (data.posts, function (key, data) {
+            if (key <= 4) {
+                items.push(
+                        '<div class="account" id="post_' + data.id + '">' +
+                        '<div class="thumbnail_image" style="background-image: url(\'' + data.attachments[0].url.replace('http://www.vam.ac.uk/blog', 'https://s3-eu-west-1.amazonaws.com/vam-blog') + '\');"></div>' +
+                        '<h2>' + data.title_plain + '</h2>' +
+                        '<time>' + new Date(data.date) + '</time>' +
+                        '</div>'
+                );
+            }
+        });
+
+        $('.wordpress .blog_posts').remove();
+
+        $( "<div/>", {
+            "class": "blog_posts",
+            html: items.join( "" )
+        }).insertAfter( ".wordpress h1" );
+    });
 }

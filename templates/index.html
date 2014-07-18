@@ -2,28 +2,14 @@
 <html>
     <head>
         <meta charset="utf-8">
-
-        <style>
-            #output{ display: none; clear: both; padding-top: 1em;}
-            .panel{ border: 1px solid #ccc; width: 24%; float: left; margin: 0 1% 0 0; padding: 0; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 20px; color: #555;}
-            .panel h1{ background-color: #ccc; color: #fff; margin: 0; padding: 0.25em 0.5em;}
-            .panel h2{ display: block; float:left; margin: 0; padding: 0;}
-            .panel a{ text-decoration: none; border-bottom: 1px solid blue;}
-            .panel .count{ float: right}
-            .account{padding: 1em;}
-            .account:nth-child(2n){background-color: aliceblue; }
-            .sparkline{ border: 1px solid #ccc; clear:both; height: 50px; width: 100%; }
-            .panel.instagram h1{background-color: #517fa4 }
-            .panel.twitter h1{background-color: #00aced }
-        </style>
-
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel='stylesheet' href='/assets/style.css' type='text/css' media='all' />
         <script type="text/javascript" src="https://www.google.com/jsapi"></script>
         <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
         <script>
             var sparkline_data = {};
             google.load("visualization", "1", { packages: ["corechart"] });
         </script>
-
     </head>
     
     <body>
@@ -70,7 +56,7 @@
                     <script>
                         sparkline_data.spark_twitter_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
                             ['DateTime', '{{ spark.name }}'],
-                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }}*1000), {{ data['followers'] }}],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }} * 1000), {{ data['followers'] }}],
                             {% endfor %}
                         ]);
                     </script>
@@ -83,9 +69,11 @@
         </div>
         {% endif %}
 
-        <div id="output">
-
+        <div class="panel wordpress">
+            <h1>V&A Blog</h1>
         </div>
+
+        <div class="output"></div>
 
     </body>
 
