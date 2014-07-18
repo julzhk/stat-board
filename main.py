@@ -146,7 +146,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
                           .limit(40)
             })
 
-        content = self.render_template('wstest.html', data)
+        content = self.render_template('index.html', data)
         self.write(content)
 
 
