@@ -30,6 +30,9 @@ var messageContainer = $('.output'),
         }
     },
     reconnect_in = 2;
+if (host === undefined) {
+    host= '127.0.0.1:8080';
+}
 
 openWebSocket();
 google.setOnLoadCallback(drawCharts);
@@ -52,8 +55,9 @@ function drawCharts() {
 // Look after the WebSockets connection and messages
 function openWebSocket() {
     if ("WebSocket" in window) {
-        var url = "ws://127.0.0.1:8080/ws/",
+        var url = "ws://"+ host + "/ws/",
             ws = new WebSocket(url);
+        console.log(url);
 
         messageContainer.html('WebSocket are supported by your Browser!');
 
