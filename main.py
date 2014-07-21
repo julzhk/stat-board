@@ -108,7 +108,12 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
         data['twitterspark'] = []
+<<<<<<< HEAD
         for user in config.INSTAGRAM_USERS:
+=======
+        data['host'] = self.request.host
+        for user in config.instagram_users:
+>>>>>>> ae63d04... add host to context
             data['instaspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user']})
