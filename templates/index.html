@@ -70,6 +70,33 @@
         </div>
         {% endif %}
 
+        {% if pinterestspark %}
+        <div class="panel pinterest">
+            <h1>Pinterest</h1>
+            {% for spark in pinterestspark %}
+
+                <div class="account" id="pinterest_{{ spark.data[0]['user_account'] }}">
+                    <h2><a href="http://pinterest.com/{{ spark.data[0]['user_account'] }}">{{ spark.name }}</a></h2>
+                    <span class="count">{{ spark.data[0]['followers'] }}</span>
+
+                    <div class="sparkline" id="spark_pinterest_{{ spark.data[0]['user_account'] }}"></div>
+
+                    <script>
+                        sparkline_data.spark_pinterest_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                            ['DateTime', '{{ spark.name }}'],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }} * 1000), {{ data['followers'] }}],
+                            {% endfor %}
+                        ]);
+                    </script>
+                </div>
+            {% endfor %}
+
+            <div class="account">
+                <p>Last updated: <span id="last_updated"></span></p>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="panel wordpress">
             <h1>V&A Blog</h1>
         </div>

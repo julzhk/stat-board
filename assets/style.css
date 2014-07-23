@@ -13,6 +13,7 @@
 .panel.instagram h1 {background-color: #517fa4 }
 .panel.twitter h1   {background-color: #00aced }
 .panel.wordpress h1 {background-color: #0085be }
+.panel.pinterest h1 {background-color: #C92228 }
 
 .panel.wordpress .thumbnail_image{ border: 1px solid #ccc; clear:both; height: 100px; width: 100%; overflow: hidden; background-size: cover; background-position: center }
 .panel.wordpress .account:nth-child(n+2) .thumbnail_image{ display: none}

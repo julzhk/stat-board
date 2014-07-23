@@ -80,6 +80,27 @@ def twitter_counts():
     print "Twitter Imported."
 
 
+def pinterest_counts():
+    '''
+    Key point: At time of writing the Pinterest API is unofficial and may/will vanish without notice
+    '''
+    sm = get_social_media_data()
+    for pinterest_user in config.PINTEREST_USERS:
+        r = requests.get(
+            url="https://api.pinterest.com/v3/pidgets/users/%s/pins/" % pinterest_user['user']
+        )
+        r = r.json()
+        insert = {
+            'service': 'pinterest',
+            'user_account': pinterest_user['user'],
+            'datetime': int(time()),
+            'followers': int(r['data']['user']['follower_count'])
+        }
+        sm.insert(insert)
+        send_message(insert)
+    print "Pinterest Imported."
+
+
 class TemplateRendering:
 
     def render_template(self, template_name, variables):
@@ -108,6 +129,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
         data['twitterspark'] = []
+        data['pinterestspark'] = []
         data['host'] = self.request.host
         for user in config.INSTAGRAM_USERS:
             data['instaspark'].append({
@@ -118,6 +140,13 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
             })
         for user in config.TWITTER_USERS:
             data['twitterspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user']})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.PINTEREST_USERS:
+            data['pinterestspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user']})
                           .sort("_id", -1)
@@ -160,7 +189,7 @@ def main():
         (r'/', IndexHandler),
         (r'/test', TestHandler),
         (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
-        (r'/ws/', WebSocketHandler),
+        (r'/ws/', WebSocketHandler)
     ])
 
     parse_command_line()
@@ -170,6 +199,7 @@ def main():
     atexit.register(lambda: sched.shutdown())
     sched.add_cron_job(instagram_counts, minute="*/1")
     sched.add_cron_job(twitter_counts, minute="*/1")
+    sched.add_cron_job(pinterest_counts, minute="*/1")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()

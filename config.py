@@ -34,3 +34,14 @@ TWITTER_USERS = [
         'user'  : 'MuseumChildhood'
     },
 ]
+
+PINTEREST_USERS = [
+    {
+        'name'  : 'V&A',
+        'user'  : 'vamuseum'
+    },
+    {
+        'name'  : 'V&A Dundee',
+        'user'  : 'vandadundee'
+    },
+]
