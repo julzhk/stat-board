@@ -114,9 +114,9 @@ function recentBlogPosts() {
         var items = [];
         $.each (data.posts, function (key, data) {
             if (key <= 4) {
+
                 items.push(
                         '<div class="account" id="post_' + data.id + '">' +
-                        '<div class="thumbnail_image" style="background-image: url(\'' + data.attachments[0].url.replace('http://www.vam.ac.uk/blog', 'https://s3-eu-west-1.amazonaws.com/vam-blog') + '\');"></div>' +
                         '<h2>' + data.title_plain + '</h2>' +
                         '<time>' + new Date(data.date) + '</time>' +
                         '</div>'
