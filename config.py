@@ -1,4 +1,4 @@
-instagram_users = [
+INSTAGRAM_USERS = [
     {
         'name'  : 'V&A',
         'user'  : 'vamuseum',
@@ -16,7 +16,7 @@ instagram_users = [
     },
 ]
 
-twitter_users = [
+TWITTER_USERS = [
     {
         'name'  : 'V&A',
         'user'  : 'V_and_A'
