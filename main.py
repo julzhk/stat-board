@@ -199,7 +199,7 @@ def main():
     atexit.register(lambda: sched.shutdown())
     sched.add_cron_job(instagram_counts, minute="*/1")
     sched.add_cron_job(twitter_counts, minute="*/1")
-    sched.add_cron_job(pinterest_counts, minute="*/1")
+    sched.add_cron_job(pinterest_counts, minute="*/5")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()
