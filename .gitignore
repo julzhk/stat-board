@@ -2,8 +2,6 @@
 
 /setuptools-5.4.1.zip
 
-/config.py
-
 *.pyc
 
 /.idea/
