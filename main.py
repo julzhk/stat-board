@@ -134,21 +134,21 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         for user in config.INSTAGRAM_USERS:
             data['instaspark'].append({
                 'name': user['name'],
-                'data': sm.find({"user_account": user['user']})
+                'data': sm.find({"user_account": user['user'], "service": 'instagram'})
                           .sort("_id", -1)
                           .limit(40)
             })
         for user in config.TWITTER_USERS:
             data['twitterspark'].append({
                 'name': user['name'],
-                'data': sm.find({"user_account": user['user']})
+                'data': sm.find({"user_account": user['user'], "service": 'twitter'})
                           .sort("_id", -1)
                           .limit(40)
             })
         for user in config.PINTEREST_USERS:
             data['pinterestspark'].append({
                 'name': user['name'],
-                'data': sm.find({"user_account": user['user']})
+                'data': sm.find({"user_account": user['user'], "service": 'pinterest'})
                           .sort("_id", -1)
                           .limit(40)
             })
