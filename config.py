@@ -45,3 +45,26 @@ PINTEREST_USERS = [
         'user'  : 'vandadundee'
     },
 ]
+
+FACEBOOK_PAGE = [
+    {
+        'name'  : 'V&A',
+        'user'  : 'victoriaandalbertmuseum',
+        'id'    : '13987918879'
+    },
+    {
+        'name'  : 'V&A Shop',
+        'user'  : '127791180573396',
+        'id'    : '127791180573396'
+    },
+    {
+        'name'  : 'V&A Dundee',
+        'user'  : 'VandADundee',
+        'id'    : '148004088588385'
+    },
+    {
+        'name'  : 'Museum of Childhood',
+        'user'  : 'museumchildhood',
+        'id'    : '67723470911'
+    }
+]

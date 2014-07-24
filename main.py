@@ -61,6 +61,24 @@ def instagram_counts():
     print "Instagram Imported."
 
 
+def facebook_counts():
+    sm = get_social_media_data()
+    for face_user in config.FACEBOOK_PAGE:
+        r = requests.get(
+            url="http://graph.facebook.com/%s/" % face_user['id']
+        )
+        r = r.json()
+        insert = {
+            'service': 'facebook',
+            'user_account': face_user['user'],
+            'datetime': int(time()),
+            'followers': int(r['likes'])
+        }
+        sm.insert(insert)
+        send_message(insert)
+    print "Facebook Imported."
+
+
 def twitter_counts():
     oauth = get_oauth()
     sm = get_social_media_data()
@@ -130,6 +148,7 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['instaspark'] = []
         data['twitterspark'] = []
         data['pinterestspark'] = []
+        data['facebookspark'] = []
         data['host'] = self.request.host
         for user in config.INSTAGRAM_USERS:
             data['instaspark'].append({
@@ -149,6 +168,13 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
             data['pinterestspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user'], "service": 'pinterest'})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.FACEBOOK_PAGE:
+            data['facebookspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user'], "service": 'facebook'})
                           .sort("_id", -1)
                           .limit(40)
             })
@@ -200,6 +226,7 @@ def main():
     sched.add_cron_job(instagram_counts, minute="*/1")
     sched.add_cron_job(twitter_counts, minute="*/1")
     sched.add_cron_job(pinterest_counts, minute="*/5")
+    sched.add_cron_job(facebook_counts, minute="*/1")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()
