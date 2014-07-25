@@ -68,3 +68,18 @@ FACEBOOK_PAGE = [
         'id'    : '67723470911'
     }
 ]
+
+YOUTUBE_USERS = [
+    {
+        'name'  : 'V&A',
+        'user'  : 'vamuseum'
+    }
+]
+
+LINKEDIN_USERS = [
+    {
+        'name'  : 'V&A',
+        'user'  : 'victoria-and-albert-museum',
+        'id'    : '23873'
+    }
+]

@@ -5,6 +5,7 @@
 .panel h2{ display: block; float:left; margin: 0; padding: 0;}
 .panel a{ text-decoration: none; border-bottom: 1px solid blue;}
 .panel .count{ float: right}
+.panel img{ max-width: 100%}
 
 .account{padding: 1em;}
 .account:nth-child(2n){background-color: aliceblue; }
@@ -15,6 +16,9 @@
 .panel.wordpress h1 {background-color: #0085be }
 .panel.pinterest h1 {background-color: #C92228 }
 .panel.facebook h1 {background-color: #3b5998 }
+.panel.youtube h1 {background-color: #c4302b }
+.panel.linkedin h1 {background: #007bb6 }
+.panel.googleplus h1 {background-color: #dd4b39 }
 
 .panel.wordpress .thumbnail_image{ border: 1px solid #ccc; clear:both; height: 100px; width: 100%; overflow: hidden; background-size: cover; background-position: center }
 .panel.wordpress .account:nth-child(n+2) .thumbnail_image{ display: none}

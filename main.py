@@ -32,15 +32,6 @@ def get_social_media_data():
         db = con.statboard
     return db.socialmedia
 
-
-def get_oauth():
-    oauth = OAuth1(environ['TWITTER_CONSUMER_KEY'],
-                   client_secret=environ['TWITTER_CONSUMER_SECRET'],
-                   resource_owner_key=environ['TWITTER_OAUTH_TOKEN'],
-                   resource_owner_secret=environ['TWITTER_OAUTH_TOKEN_SECRET']
-                   )
-    return oauth
-
 def instagram_counts():
     sm = get_social_media_data()
     for instauser in config.INSTAGRAM_USERS:
@@ -80,7 +71,12 @@ def facebook_counts():
 
 
 def twitter_counts():
-    oauth = get_oauth()
+    oauth = OAuth1(environ['TWITTER_CONSUMER_KEY'],
+                   client_secret=environ['TWITTER_CONSUMER_SECRET'],
+                   resource_owner_key=environ['TWITTER_OAUTH_TOKEN'],
+                   resource_owner_secret=environ['TWITTER_OAUTH_TOKEN_SECRET']
+                   )
+
     sm = get_social_media_data()
     for twitteruser in config.TWITTER_USERS:
         r = requests.get(
@@ -96,6 +92,31 @@ def twitter_counts():
         sm.insert(insert)
         send_message(insert)
     print "Twitter Imported."
+
+
+def linkedin_count():
+    oauth = OAuth1(environ['LINKEDIN_API_KEY'],
+                   client_secret=environ['LINKEDIN_SECRET_KEY'],
+                   resource_owner_key=environ['LINKEDIN_OAUTH_TOKEN'],
+                   resource_owner_secret=environ['LINKEDIN_OAUTH_TOKEN_SECRET']
+                   )
+
+    sm = get_social_media_data()
+    for user in config.LINKEDIN_USERS:
+        r = requests.get(
+            url="http://api.linkedin.com/v1/companies/%s:(num-followers)?format=json" % user['id'],
+            auth=oauth)
+        r = r.json()
+        insert = {
+            'service': 'linkedin',
+            'user_account': user['user'],
+            'datetime': int(time()),
+            'followers': int(r['numFollowers'])
+        }
+        print insert
+        sm.insert(insert)
+        send_message(insert)
+    print "LinkedIn Imported."
 
 
 def pinterest_counts():
@@ -117,6 +138,24 @@ def pinterest_counts():
         sm.insert(insert)
         send_message(insert)
     print "Pinterest Imported."
+
+
+def youtube_counts():
+    sm = get_social_media_data()
+    for user in config.YOUTUBE_USERS:
+        r = requests.get(
+            url="http://gdata.youtube.com/feeds/api/users/%s?v=2&alt=json" % user['user']
+        )
+        r = r.json()
+        insert = {
+            'service': 'youtube',
+            'user_account': user['user'],
+            'datetime': int(time()),
+            'followers': int(r['entry']['yt$statistics']['subscriberCount'])
+        }
+        sm.insert(insert)
+        send_message(insert)
+    print "YouTube Imported."
 
 
 class TemplateRendering:
@@ -149,6 +188,8 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['twitterspark'] = []
         data['pinterestspark'] = []
         data['facebookspark'] = []
+        data['youtubespark'] = []
+        data['linkedinspark'] = []
         data['host'] = self.request.host
         for user in config.INSTAGRAM_USERS:
             data['instaspark'].append({
@@ -175,6 +216,20 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
             data['facebookspark'].append({
                 'name': user['name'],
                 'data': sm.find({"user_account": user['user'], "service": 'facebook'})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.YOUTUBE_USERS:
+            data['youtubespark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user'], "service": 'youtube'})
+                          .sort("_id", -1)
+                          .limit(40)
+            })
+        for user in config.LINKEDIN_USERS:
+            data['linkedinspark'].append({
+                'name': user['name'],
+                'data': sm.find({"user_account": user['user'], "service": 'linkedin'})
                           .sort("_id", -1)
                           .limit(40)
             })
@@ -226,7 +281,9 @@ def main():
     sched.add_cron_job(instagram_counts, minute="*/1")
     sched.add_cron_job(twitter_counts, minute="*/1")
     sched.add_cron_job(pinterest_counts, minute="*/5")
+    sched.add_cron_job(youtube_counts, minute="*/5")
     sched.add_cron_job(facebook_counts, minute="*/1")
+    sched.add_cron_job(linkedin_count, minute="*/5")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()

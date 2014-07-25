@@ -124,8 +124,68 @@
         </div>
         {% endif %}
 
+        {% if youtubespark %}
+        <div class="panel youtube">
+            <h1>YouTube</h1>
+            {% for spark in youtubespark %}
+
+                <div class="account" id="youtube_{{ spark.data[0]['user_account'] }}">
+                    <h2><a href="http://youtube.com/{{ spark.data[0]['user_account'] }}">{{ spark.name }}</a></h2>
+                    <span class="count">{{ spark.data[0]['followers'] }}</span>
+
+                    <div class="sparkline" id="spark_youtube_{{ spark.data[0]['user_account'] }}"></div>
+
+                    <script>
+                        sparkline_data.spark_youtube_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                            ['DateTime', '{{ spark.name }}'],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }} * 1000), {{ data['followers'] }}],
+                            {% endfor %}
+                        ]);
+                    </script>
+                </div>
+            {% endfor %}
+
+            <div class="account">
+                <p>Last updated: <span id="last_updated"></span></p>
+            </div>
+        </div>
+        {% endif %}
+
+
+        {% if linkedinspark %}
+        <div class="panel linkedin">
+            <h1>LinkedIn</h1>
+            {% for spark in linkedinspark %}
+
+                <div class="account" id="linkedin_{{ spark.data[0]['user_account'] }}">
+                    <h2><a href="http://linkedin.com/company/{{ spark.data[0]['user_account'] }}">{{ spark.name }}</a></h2>
+                    <span class="count">{{ spark.data[0]['followers'] }}</span>
+
+                    <div class="sparkline" id="spark_linkedin_{{ spark.data[0]['user_account'] }}"></div>
+
+                    <script>
+                        sparkline_data.spark_linkedin_{{ spark.data[0]['user_account'] }} = google.visualization.arrayToDataTable([
+                            ['DateTime', '{{ spark.name }}'],
+                            {% for data in spark['data'] %}[ new Date({{ data['datetime'] }} * 1000), {{ data['followers'] }}],
+                            {% endfor %}
+                        ]);
+                    </script>
+                </div>
+            {% endfor %}
+
+            <div class="account">
+                <p>Last updated: <span id="last_updated"></span></p>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="panel wordpress">
             <h1>V&A Blog</h1>
+        </div>
+
+        <div class="panel">
+            <h1>Email Subscribers</h1>
+            <img src="https://docs.google.com/spreadsheets/d/1nTJ9kNh2zu1k2fC7qBG7X5jlLr9Me92D0b98gRlkXEw/embed/oimg?id=1nTJ9kNh2zu1k2fC7qBG7X5jlLr9Me92D0b98gRlkXEw&oid=1287785364&zx=j22vuzwze3ug" />
         </div>
 
         <div class="output"></div>
