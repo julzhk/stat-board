@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import config
 import atexit
 from apscheduler.scheduler import Scheduler
@@ -113,7 +114,6 @@ def linkedin_count():
             'datetime': int(time()),
             'followers': int(r['numFollowers'])
         }
-        print insert
         sm.insert(insert)
         send_message(insert)
     print "LinkedIn Imported."
@@ -183,7 +183,6 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
     def get(self):
         data = {}
         sm = get_social_media_data()
-        data['vamuseum'] = sm.find({"user_account": "vamuseum"}).limit(2000)
         data['instaspark'] = []
         data['twitterspark'] = []
         data['pinterestspark'] = []
@@ -238,6 +237,33 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         self.write(content)
 
 
+class DashHandler(tornado.web.RequestHandler, TemplateRendering):
+    def group_data(self, incoming):
+        out = OrderedDict()
+
+        for cur in incoming:
+            fuzzy_date = str(cur['datetime'])[:-1]
+
+            try:
+                out[fuzzy_date]['details'].append(cur)
+            except KeyError:
+                out[fuzzy_date] = {'total': 0, 'details': []}
+                out[fuzzy_date]['details'].append(cur)
+
+            out[fuzzy_date]['total'] = out[fuzzy_date]['total'] + cur['followers']
+
+        return out
+
+
+    def get(self):
+        data = {}
+        sm = get_social_media_data()
+        data['host'] = self.request.host
+        data['facebook'] = self.group_data(sm.find({"service": 'facebook'}).sort("datetime", -1).limit(500))
+
+        content = self.render_template('dash.html', data)
+        self.write(content)
+
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, *args):
         clients.append(self)
@@ -268,6 +294,7 @@ def main():
 
     application = tornado.web.Application([
         (r'/', IndexHandler),
+        (r'/dash', DashHandler),
         (r'/test', TestHandler),
         (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
         (r'/ws/', WebSocketHandler)

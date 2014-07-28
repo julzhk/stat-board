@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel='stylesheet' href='/assets/style.css' type='text/css' media='all' />
+        <script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script src="//rawgithub.com/davatron5000/FitText.js/master/jquery.fittext.js"></script>
+
+        <style>
+            @font-face {
+              font-family: "TheSansBold";
+              src: url("http://europe-trails.appspot.com/fonts/TheSans_LP_700_Bold.eot?") format("eot"), url("http://europe-trails.appspot.com/fonts/TheSans_LP_700_Bold.woff") format("woff");
+            }
+            body{ color: #4F506E; font-family: TheSansBold, sans-serif; letter-spacing: -1px}
+            h1, h2, p { margin: 0; padding: 0;}
+            .square{ width:50%; height: 0; padding-bottom:50%; border: 1px solid #979797; background-color: #D8D8D8; box-sizing: border-box; overflow: hidden}
+            .square h1{ text-transform: uppercase; font-size: 1.5em;}
+            .square .counter{ font-size: 3em; }
+        </style>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $("h1").fitText();
+            $(".counter").fitText(0.3);
+        });
+        </script>
+
+    </head>
+    
+    <body>
+
+        {% set current_count = {'counter': 0} %}
+
+        {% for fb in facebook %}
+
+            {% set d = facebook.get(fb) %}
+
+            {% if loop.first %}
+                {% if current_count.update({'counter': d.get('total'), 'date': 'yyyymmdd'}) %}  {% endif %}
+            {% endif %}
+
+            {#
+            {{ d.get('total') }} <br />
+
+            {% for data in d.get('details') %}
+
+                {{ data }}<br />
+
+            {% endfor %}
+            #}
+
+        {% endfor %}
+
+        <div class="square facebook">
+
+            <h1>Facebook</h1>
+
+            <h2 class="counter">{{ current_count.counter }}</h2>
+            <p class="updated">Updated {{ current_count.date }}</p>
+
+            <div class="sparkline">
+
+            </div>
+
+            <p class="analysis up">+2.34% June-July 2014</p>
+
+        </div>
+
+    </body>
+
+</html>
