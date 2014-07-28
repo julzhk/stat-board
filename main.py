@@ -180,58 +180,29 @@ class TestHandler(tornado.web.RequestHandler, TemplateRendering):
 
 
 class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
+
+    def get_data(self, username, service):
+            sm = get_social_media_data()
+            return sm.find({"user_account": username, "service": service}).sort("_id", -1).limit(40)
+
+    def user_loop(self, users, service):
+        r = []
+        for user in users:
+            r.append({
+                'name': user['name'],
+                'data': self.get_data(user['user'], service)
+            })
+        return r
+
     def get(self):
-        data = {}
-        sm = get_social_media_data()
-        data['instaspark'] = []
-        data['twitterspark'] = []
-        data['pinterestspark'] = []
-        data['facebookspark'] = []
-        data['youtubespark'] = []
-        data['linkedinspark'] = []
+        data = dict()
         data['host'] = self.request.host
-        for user in config.INSTAGRAM_USERS:
-            data['instaspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'instagram'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.TWITTER_USERS:
-            data['twitterspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'twitter'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.PINTEREST_USERS:
-            data['pinterestspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'pinterest'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.FACEBOOK_PAGE:
-            data['facebookspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'facebook'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.YOUTUBE_USERS:
-            data['youtubespark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'youtube'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
-        for user in config.LINKEDIN_USERS:
-            data['linkedinspark'].append({
-                'name': user['name'],
-                'data': sm.find({"user_account": user['user'], "service": 'linkedin'})
-                          .sort("_id", -1)
-                          .limit(40)
-            })
+        data['insta_spark'] = self.user_loop(config.INSTAGRAM_USERS, 'instagram')
+        data['twitter_spark'] = self.user_loop(config.TWITTER_USERS, 'twitter')
+        data['pinterest_spark'] = self.user_loop(config.PINTEREST_USERS, 'pinterest')
+        data['facebook_spark'] = self.user_loop(config.FACEBOOK_PAGE, 'facebook')
+        data['youtube_spark'] = self.user_loop(config.YOUTUBE_USERS, 'youtube')
+        data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
 
         content = self.render_template('index.html', data)
         self.write(content)
