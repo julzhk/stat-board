@@ -83,3 +83,5 @@ LINKEDIN_USERS = [
         'id'    : '23873'
     }
 ]
+
+GOOGLE_ANALYTICS_PROFILE_ID = 595561

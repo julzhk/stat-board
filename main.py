@@ -158,6 +158,7 @@ def youtube_counts():
     print "YouTube Imported."
 
 
+
 class TemplateRendering:
 
     def render_template(self, template_name, variables):
@@ -231,9 +232,10 @@ class DashHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = get_social_media_data()
         data['host'] = self.request.host
         data['facebook'] = self.group_data(sm.find({"service": 'facebook'}).sort("datetime", -1).limit(500))
-
+        data['analytics_overview'] = sm.find({"service": 'analytic_overview'}).sort("date", -1).limit(40)
         content = self.render_template('dash.html', data)
         self.write(content)
+
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def open(self, *args):

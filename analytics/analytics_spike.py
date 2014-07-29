@@ -5,6 +5,11 @@ from oauth2client.file import Storage
 from oauth2client.tools import run
 from oauth2client.client import AccessTokenRefreshError
 from apiclient.errors import HttpError
+from pprint import pprint
+from datetime import datetime
+from calendar import timegm
+from pymongo import Connection, MongoClient
+
 CLIENT_SECRETS = 'client_secrets.json'
 MISSING_CLIENT_SECRETS_MESSAGE = '%s is missing' % CLIENT_SECRETS
 TOKEN_FILE_NAME = 'analytics.dat'
@@ -12,6 +17,16 @@ TOKEN_FILE_NAME = 'analytics.dat'
 FLOW = flow_from_clientsecrets(CLIENT_SECRETS,
                                scope='https://www.googleapis.com/auth/analytics.readonly',
                                message=MISSING_CLIENT_SECRETS_MESSAGE)
+
+
+def get_social_media_data():
+    try:
+        client = MongoClient(environ['MONGOLAB_URI'])
+        db = client.get_default_database()
+    except:
+        con = Connection()
+        db = con.statboard
+    return db.socialmedia
 
 
 def prepare_credentials():
@@ -58,9 +73,9 @@ def get_results(service, profile_id):
     # Use the Analytics Service Object to query the Core Reporting API
     return service.data().ga().get(
         ids='ga:' + profile_id,
-        start_date='2014-06-24',
+        start_date='2014-07-24',
         end_date='2014-07-24',
-        metrics='ga:sessions').execute()
+        metrics='ga:sessions,ga:users,ga:pageviews,ga:pageviewsPerSession').execute()
 
 
 def print_results(results):
@@ -72,17 +87,44 @@ def print_results(results):
         print 'No results found'
 
 
-if __name__ == '__main__':
+def results_to_dict(results):
+
+    sm = get_social_media_data()
+
+    date = datetime.strptime(results.get('query').get('start-date'), '%Y-%m-%d')
+    r = {
+        'service': 'analytic_overview',
+        'date': timegm(date.utctimetuple()),
+        'profile_id': results.get('profileInfo').get('profileId'),
+        'sessions': results.get('totalsForAllResults').get('ga:sessions'),
+        'users': results.get('totalsForAllResults').get('ga:users'),
+        'pageviews': results.get('totalsForAllResults').get('ga:pageviews'),
+        'pageviews_per_session': results.get('totalsForAllResults').get('ga:pageviewsPerSession')
+    }
+
+    sm.insert(r)
+
+    return r
+
+
+def go_get():
     service = initialize_service()
     try:
-        profile_id = get_first_profile_id(service)
+        #profile_id = get_first_profile_id(service)
+        profile_id = '595561'
         if profile_id:
             results = get_results(service, profile_id)
-            print_results(results)
     except TypeError, error:
         print ('There was an error in constructing your query : %s' % error)
     except HttpError, error:
         print ('Arg, there was an API error : %s : %s' %
                (error.resp.status, error._get_reason()))
     except AccessTokenRefreshError:
-        print ('The credentials have been revoked or expired, please re-authorize')
+         print ('The credentials have been revoked or expired, please re-authorize')
+
+    r = results_to_dict(results)
+    pprint(r)
+    return r
+
+if __name__ == '__main__':
+    go_get()
