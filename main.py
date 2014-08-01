@@ -5,7 +5,7 @@ from apscheduler.schedulers.tornado import TornadoScheduler
 import json
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from os import path, environ
-from time import gmtime, strftime, time
+from time import time
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -13,9 +13,8 @@ import tornado.httpserver
 from tornado.websocket import WebSocketClosedError
 from tornado.options import define, options, parse_command_line
 from pymongo import Connection, MongoClient
-import requests
-from requests_oauthlib import OAuth1
 import random
+import social_media_fetcher
 
 define("port", default=8080, help="run on the given port", type=int)
 
@@ -30,131 +29,6 @@ def get_social_media_data():
         con = Connection()
         db = con.statboard
     return db.socialmedia
-
-def instagram_counts():
-    sm = get_social_media_data()
-    for instauser in config.INSTAGRAM_USERS:
-        r = requests.get(
-            'https://api.instagram.com/v1/users/%s/?client_id=%s'
-            % (instauser['id'], environ['INSTAGRAM_CLIENT_ID'])
-        )
-        r = r.json()
-        insert = {
-            "service": "instagram",
-            "user_account": instauser['user'],
-            "datetime": int(time()),
-            "followers": r['data']['counts']['followed_by']
-        }
-        sm.insert(insert)
-        send_message(insert)
-
-    print "Instagram Imported."
-
-
-def facebook_counts():
-    sm = get_social_media_data()
-    for face_user in config.FACEBOOK_PAGE:
-        r = requests.get(
-            url="http://graph.facebook.com/%s/" % face_user['id']
-        )
-        r = r.json()
-        insert = {
-            'service': 'facebook',
-            'user_account': face_user['user'],
-            'datetime': int(time()),
-            'followers': int(r['likes'])
-        }
-        sm.insert(insert)
-        send_message(insert)
-    print "Facebook Imported."
-
-
-def twitter_counts():
-    oauth = OAuth1(environ['TWITTER_CONSUMER_KEY'],
-                   client_secret=environ['TWITTER_CONSUMER_SECRET'],
-                   resource_owner_key=environ['TWITTER_OAUTH_TOKEN'],
-                   resource_owner_secret=environ['TWITTER_OAUTH_TOKEN_SECRET']
-                   )
-
-    sm = get_social_media_data()
-    for twitteruser in config.TWITTER_USERS:
-        r = requests.get(
-            url="https://api.twitter.com/1.1/users/lookup.json?screen_name=%s" % twitteruser['user'],
-            auth=oauth)
-        r = r.json()
-        insert = {
-            'service': 'twitter',
-            'user_account': twitteruser['user'],
-            'datetime': int(time()),
-            'followers': int(r[0]['followers_count'])
-        }
-        sm.insert(insert)
-        send_message(insert)
-    print "Twitter Imported."
-
-
-def linkedin_count():
-    oauth = OAuth1(environ['LINKEDIN_API_KEY'],
-                   client_secret=environ['LINKEDIN_SECRET_KEY'],
-                   resource_owner_key=environ['LINKEDIN_OAUTH_TOKEN'],
-                   resource_owner_secret=environ['LINKEDIN_OAUTH_TOKEN_SECRET']
-                   )
-
-    sm = get_social_media_data()
-    for user in config.LINKEDIN_USERS:
-        r = requests.get(
-            url="http://api.linkedin.com/v1/companies/%s:(num-followers)?format=json" % user['id'],
-            auth=oauth)
-        r = r.json()
-        insert = {
-            'service': 'linkedin',
-            'user_account': user['user'],
-            'datetime': int(time()),
-            'followers': int(r['numFollowers'])
-        }
-        sm.insert(insert)
-        send_message(insert)
-    print "LinkedIn Imported."
-
-
-def pinterest_counts():
-    '''
-    Key point: At time of writing the Pinterest API is unofficial and may/will vanish without notice
-    '''
-    sm = get_social_media_data()
-    for pinterest_user in config.PINTEREST_USERS:
-        r = requests.get(
-            url="https://api.pinterest.com/v3/pidgets/users/%s/pins/" % pinterest_user['user']
-        )
-        r = r.json()
-        insert = {
-            'service': 'pinterest',
-            'user_account': pinterest_user['user'],
-            'datetime': int(time()),
-            'followers': int(r['data']['user']['follower_count'])
-        }
-        sm.insert(insert)
-        send_message(insert)
-    print "Pinterest Imported."
-
-
-def youtube_counts():
-    sm = get_social_media_data()
-    for user in config.YOUTUBE_USERS:
-        r = requests.get(
-            url="http://gdata.youtube.com/feeds/api/users/%s?v=2&alt=json" % user['user']
-        )
-        r = r.json()
-        insert = {
-            'service': 'youtube',
-            'user_account': user['user'],
-            'datetime': int(time()),
-            'followers': int(r['entry']['yt$statistics']['subscriberCount'])
-        }
-        sm.insert(insert)
-        send_message(insert)
-    print "YouTube Imported."
-
 
 
 class TemplateRendering:
@@ -198,11 +72,11 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['host'] = self.request.host
 
         data['insta_spark'] = self.user_loop(config.INSTAGRAM_USERS, 'instagram')
-        # data['twitter_spark'] = self.user_loop(config.TWITTER_USERS, 'twitter')
-        # data['pinterest_spark'] = self.user_loop(config.PINTEREST_USERS, 'pinterest')
-        # data['facebook_spark'] = self.user_loop(config.FACEBOOK_PAGE, 'facebook')
-        # data['youtube_spark'] = self.user_loop(config.YOUTUBE_USERS, 'youtube')
-        # data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
+        data['twitter_spark'] = self.user_loop(config.TWITTER_USERS, 'twitter')
+        data['pinterest_spark'] = self.user_loop(config.PINTEREST_USERS, 'pinterest')
+        data['facebook_spark'] = self.user_loop(config.FACEBOOK_PAGE, 'facebook')
+        data['youtube_spark'] = self.user_loop(config.YOUTUBE_USERS, 'youtube')
+        data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
 
         content = self.render_template('index.html', data)
         self.write(content)
@@ -231,7 +105,7 @@ class DashHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = get_social_media_data()
         data['host'] = self.request.host
         data['facebook'] = self.group_data(sm.find({"service": 'facebook'}).sort("datetime", -1).limit(500))
-        data['analytics_overview'] = sm.find({"service": 'analytic_overview'}).sort("date", -1).limit(40)
+        # data['analytics_overview'] = sm.find({"service": 'analytic_overview'}).sort("date", -1).limit(40)
         content = self.render_template('dash.html', data)
         self.write(content)
 
@@ -245,7 +119,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 def send_message(message=None):
 
     if not message:
-        message = {"followers": random.randrange(17950,17960), "user_account": "vamuseum", "service": "instagram", "datetime": int(time())}
+        message = {"followers": random.randrange(17950, 17960), "user_account": "vamuseum", "service": "instagram", "datetime": int(time())}
 
     if type(message) is not dict:
         return
@@ -277,12 +151,12 @@ def main():
 
     sched = TornadoScheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
-    sched.add_job(instagram_counts, 'interval', seconds=60)
-    sched.add_job(twitter_counts, 'interval', seconds=60)
-    sched.add_job(pinterest_counts, 'interval', seconds=300)
-    sched.add_job(youtube_counts, 'interval', seconds=60)
-    sched.add_job(facebook_counts, 'interval', seconds=60)
-    sched.add_job(linkedin_count, 'interval', seconds=300)
+    sched.add_job(social_media_fetcher.instagram_counts, 'interval', seconds=60)
+    sched.add_job(social_media_fetcher.twitter_counts, 'interval', seconds=60)
+    sched.add_job(social_media_fetcher.pinterest_counts, 'interval', seconds=300)
+    sched.add_job(social_media_fetcher.youtube_counts, 'interval', seconds=300)
+    sched.add_job(social_media_fetcher.facebook_counts, 'interval', seconds=60)
+    sched.add_job(social_media_fetcher.linkedin_count, 'interval', seconds=300)
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()
