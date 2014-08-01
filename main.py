@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import config
 import atexit
-from apscheduler.scheduler import Scheduler
+from apscheduler.schedulers.tornado import TornadoScheduler
 import json
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 from os import path, environ
@@ -21,8 +21,6 @@ define("port", default=8080, help="run on the given port", type=int)
 
 # List of all the clients connected via websockets
 clients = []
-sched = Scheduler()
-
 
 def get_social_media_data():
     try:
@@ -198,12 +196,13 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
     def get(self):
         data = dict()
         data['host'] = self.request.host
+
         data['insta_spark'] = self.user_loop(config.INSTAGRAM_USERS, 'instagram')
-        data['twitter_spark'] = self.user_loop(config.TWITTER_USERS, 'twitter')
-        data['pinterest_spark'] = self.user_loop(config.PINTEREST_USERS, 'pinterest')
-        data['facebook_spark'] = self.user_loop(config.FACEBOOK_PAGE, 'facebook')
-        data['youtube_spark'] = self.user_loop(config.YOUTUBE_USERS, 'youtube')
-        data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
+        # data['twitter_spark'] = self.user_loop(config.TWITTER_USERS, 'twitter')
+        # data['pinterest_spark'] = self.user_loop(config.PINTEREST_USERS, 'pinterest')
+        # data['facebook_spark'] = self.user_loop(config.FACEBOOK_PAGE, 'facebook')
+        # data['youtube_spark'] = self.user_loop(config.YOUTUBE_USERS, 'youtube')
+        # data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
 
         content = self.render_template('index.html', data)
         self.write(content)
@@ -276,14 +275,14 @@ def main():
     parse_command_line()
     application.listen(options.port)
 
-    sched = Scheduler(daemon=True)
+    sched = TornadoScheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
-    sched.add_cron_job(instagram_counts, minute="*/1")
-    sched.add_cron_job(twitter_counts, minute="*/1")
-    sched.add_cron_job(pinterest_counts, minute="*/5")
-    sched.add_cron_job(youtube_counts, minute="*/5")
-    sched.add_cron_job(facebook_counts, minute="*/1")
-    sched.add_cron_job(linkedin_count, minute="*/5")
+    sched.add_job(instagram_counts, 'interval', seconds=60)
+    sched.add_job(twitter_counts, 'interval', seconds=60)
+    sched.add_job(pinterest_counts, 'interval', seconds=300)
+    sched.add_job(youtube_counts, 'interval', seconds=60)
+    sched.add_job(facebook_counts, 'interval', seconds=60)
+    sched.add_job(linkedin_count, 'interval', seconds=300)
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()
