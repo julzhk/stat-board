@@ -151,12 +151,12 @@ def main():
 
     sched = TornadoScheduler(daemon=True)
     atexit.register(lambda: sched.shutdown())
-    sched.add_job(social_media_fetcher.instagram_counts, 'interval', seconds=60)
-    sched.add_job(social_media_fetcher.twitter_counts, 'interval', seconds=60)
-    sched.add_job(social_media_fetcher.pinterest_counts, 'interval', seconds=300)
-    sched.add_job(social_media_fetcher.youtube_counts, 'interval', seconds=300)
-    sched.add_job(social_media_fetcher.facebook_counts, 'interval', seconds=60)
-    sched.add_job(social_media_fetcher.linkedin_count, 'interval', seconds=300)
+    sched.add_job(social_media_fetcher.instagram_counts, 'cron', minute="*/1")
+    sched.add_job(social_media_fetcher.twitter_counts, 'cron', minute="*/1")
+    sched.add_job(social_media_fetcher.pinterest_counts, 'cron', minute="*/5")
+    sched.add_job(social_media_fetcher.youtube_counts, 'cron', minute="*/5")
+    sched.add_job(social_media_fetcher.facebook_counts, 'cron', minute="*/1")
+    sched.add_job(social_media_fetcher.linkedin_count, 'cron', minute="*/5")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()
