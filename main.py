@@ -105,7 +105,10 @@ class DashHandler(tornado.web.RequestHandler, TemplateRendering):
         sm = get_social_media_data()
         data['host'] = self.request.host
         data['facebook'] = self.group_data(sm.find({"service": 'facebook'}).sort("datetime", -1).limit(500))
-        # data['analytics_overview'] = sm.find({"service": 'analytic_overview'}).sort("date", -1).limit(40)
+        data['instagram'] = self.group_data(sm.find({"service": 'instagram'}).sort("datetime", -1).limit(500))
+        data['twitter'] = self.group_data(sm.find({"service": 'twitter'}).sort("datetime", -1).limit(500))
+        data['pinterest'] = self.group_data(sm.find({"service": 'pinterest'}).sort("datetime", -1).limit(500))
+        data['analytics_overview'] = sm.find({"service": 'analytic_overview', "date": {"$gt": 1356998400}}).sort("date", -1).limit(730)
         content = self.render_template('dash.html', data)
         self.write(content)
 
@@ -157,6 +160,8 @@ def main():
     sched.add_job(social_media_fetcher.youtube_counts, 'cron', minute="*/5")
     sched.add_job(social_media_fetcher.facebook_counts, 'cron', minute="*/1")
     sched.add_job(social_media_fetcher.linkedin_count, 'cron', minute="*/5")
+    # Google Analytics importer
+    # sched.add_job(analytics_fetcher.get_results, 'cron', hour="1", minute="1")
     sched.start()
 
     tornado.ioloop.IOLoop.instance().start()

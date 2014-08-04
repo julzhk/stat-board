@@ -21,43 +21,31 @@
             }
             body{ color: #4F506E; font-family: TheSansBold, sans-serif; letter-spacing: -1px; margin: 0; padding: 0;}
             h1, h2, p { margin: 0; padding: 0;}
-            .square{ float: left; width:48%; height: 0; padding-bottom:48%; border: 1px solid #979797; background-color: #D8D8D8; box-sizing: border-box; overflow: hidden; margin: 1%}
-            .square h1{ text-transform: uppercase; font-size: 1.5em;}
-            .square .counter{ font-size: 3em; }
-            .square .sparkline{ border: 0;}
+            .stat{ border: 1px solid #979797; background-color: #D8D8D8; box-sizing: border-box; overflow: hidden;}
+            .stat h1{ text-transform: uppercase; font-size: 1.5em;white-space:nowrap;}
+            .stat .counter{ font-size: 3em; }
+            .stat .sparkline{ border: 0;}
+
+            .span_3, .span_9 {float: left;}
+            .span_3 { width: 25%; }
+            .span_9 { width: 75%; }
+
+            .shape_3x3, .shape_9x3{height: 0}
+            .shape_3x3{ padding-bottom: 25%;}
+            .shape_9x3{ padding-bottom: 25%;}
         </style>
 
     </head>
     
     <body>
 
-        {% set current_count = {'counter': 0} %}
-
-        {% for fb in facebook %}
-
-            {% set d = facebook.get(fb) %}
-
-            {% if loop.first %}
-                {% if current_count.update({'counter': d.get('total'), 'date': d.get('details')[0]['datetime']}) %}  {% endif %}
-            {% endif %}
-
-            {#
-            {{ d.get('total') }} <br />
-
-            {% for data in d.get('details') %}
-
-                {{ data }}<br />
-
-            {% endfor %}
-            #}
-
-        {% endfor %}
-
-        <div class="square analytics">
+        <div class="stat analytics span_3 shape_3x3">
             <h1>Sessions</h1>
             <h2 class="counter">{{ analytics_overview[0]['sessions'] }}</h2>
             <p class="updated">{{ analytics_overview[0]['date'] }}</p>
+        </div>
 
+        <div class="stat analytics span_9 shape_9x3">
             <div class="sparkline" id="analytic_spark"></div>
             <script>
                 analytic_spark = google.visualization.arrayToDataTable([
@@ -68,20 +56,76 @@
             </script>
         </div>
 
-        <div class="square facebook">
+        <div class="stat span_3 shape_3x3 facebook">
+
+            {% set current_count = {'counter': 0} %}
+            {% for fb in facebook %}
+                {% set d = facebook.get(fb) %}
+                {% if loop.first %}
+                    {% if current_count.update({'counter': d.get('total'), 'date': d.get('details')[0]['datetime']}) %}  {% endif %}
+                {% endif %}
+            {% endfor %}
 
             <h1>Facebook Audience</h1>
 
             <h2 class="counter">{{ current_count.counter }}</h2>
             <p class="updated">{{ current_count.date }}</p>
 
-            <div class="sparkline">
+        </div>
 
-            </div>
+        <div class="stat span_3 shape_3x3 twitter">
 
-            <p class="analysis up">+2.34% June-July 2014</p>
+            {% set current_count = {'counter': 0} %}
+            {% for data in twitter %}
+                {% set d = twitter.get(data) %}
+                {% if loop.first %}
+                    {% if current_count.update({'counter': d.get('total'), 'date': d.get('details')[0]['datetime']}) %}  {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            <h1>Twitter Audience</h1>
+
+            <h2 class="counter">{{ current_count.counter }}</h2>
+            <p class="updated">{{ current_count.date }}</p>
 
         </div>
+
+        <div class="stat span_3 shape_3x3 instagram">
+
+            {% set current_count = {'counter': 0} %}
+            {% for data in instagram %}
+                {% set d = instagram.get(data) %}
+                {% if loop.first %}
+                    {% if current_count.update({'counter': d.get('total'), 'date': d.get('details')[0]['datetime']}) %}  {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            <h1>Instagram Audience</h1>
+
+            <h2 class="counter">{{ current_count.counter }}</h2>
+            <p class="updated">{{ current_count.date }}</p>
+
+        </div>
+
+        <div class="stat span_3 shape_3x3 pinterest">
+
+            {% set current_count = {'counter': 0} %}
+            {% for data in pinterest %}
+                {% set d = pinterest.get(data) %}
+                {% if loop.first %}
+                    {% if current_count.update({'counter': d.get('total'), 'date': d.get('details')[0]['datetime']}) %}  {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            <h1>Pinterest Audience</h1>
+
+            <h2 class="counter">{{ current_count.counter }}</h2>
+            <p class="updated">{{ current_count.date }}</p>
+
+        </div>
+
+
+
 
 
     <script type="text/javascript">
