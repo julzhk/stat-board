@@ -100,7 +100,7 @@ def results_to_mongo(results):
 
 
 def go_get():
-    results = get_results()
+    results = backfill_results(10)
     print results
     # results_to_mongo(results)
 
