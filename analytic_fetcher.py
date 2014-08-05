@@ -9,6 +9,8 @@ from apiclient.errors import HttpError
 from datetime import datetime, timedelta
 from calendar import timegm
 from pymongo import Connection, MongoClient
+from numpy import *
+from pprint import pprint
 
 CLIENT_SECRETS = 'analytics/client_secrets.json'
 MISSING_CLIENT_SECRETS_MESSAGE = '%s is missing' % CLIENT_SECRETS
@@ -105,5 +107,46 @@ def go_get():
     # results_to_mongo(results)
 
 
+def analytic_zipper(analytics):
+    table = table_maker(analytics)
+    header = create_header_row(table)
+    table = headerize(table, header)
+    return table[: , -2: ]
+
+
+def create_header_row(table):
+    columns_count = len(table[0])
+    header_row = arange(columns_count)
+    return header_row
+
+
+def headerize(table, header_row):
+    table[0] = header_row
+    return table
+
+
+def table_maker(analytics):
+    """
+    >>> analytic_zipper([{u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'23048', u'profile_id': u'595561', u'date': 1407196800}, {u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'15048', u'profile_id': u'595561', u'date': 1375660800}])
+    [['08-05', 23048, 15048]]
+    >>> analytic_zipper([{u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'23048', u'profile_id': u'595561', u'date': 1407196800}, {u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'15048', u'profile_id': u'595561', u'date': 1375660800},{u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'23424', u'profile_id': u'595561', u'date': 1407110400}, {u'pageviews_per_session': u'3.1128080527594584', u'pageviews': u'71744', u'users': u'20657', u'service': u'analytic_overview', u'sessions': u'15251', u'profile_id': u'595561', u'date': 1375574400}])
+    [['08-05', 23048, 15048], ['08-04', 23424, 15251]]
+    """
+
+    output = empty( (366,0) )
+    for ana in analytics:
+        day_number = datetime.fromtimestamp(ana['date']).strftime('%j')
+        year = datetime.fromtimestamp(ana['date']).strftime('%y')
+        try_adding = True
+        while try_adding:
+            try:
+                output[day_number, year] = int(ana['sessions'])
+                try_adding = False
+            except IndexError:
+                output = c_[ output, zeros(366)]
+                try_adding = True
+    return output
 if __name__ == '__main__':
-   go_get()
+    sm = setup_mongo()
+    test = sm.find({"service": 'analytic_overview', "date": {"$gt": 1356998400}}).sort("date", -1).limit(730)
+    analytic_zipper(test)

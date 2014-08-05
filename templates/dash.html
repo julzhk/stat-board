@@ -24,7 +24,7 @@
             .stat{ border: 1px solid #979797; background-color: #D8D8D8; box-sizing: border-box; overflow: hidden;}
             .stat h1{ text-transform: uppercase; font-size: 1.5em;white-space:nowrap;}
             .stat .counter{ font-size: 3em; }
-            .stat .sparkline{ border: 0;}
+            .stat .sparkline{ border: 0; height: 100%;}
 
             .span_3, .span_9 {float: left;}
             .span_3 { width: 25%; }
@@ -39,6 +39,12 @@
     
     <body>
 
+        {# for zip in analytic_zip %}
+            {{ zip }}<br />
+            {{ loop.index0 }}: {{ zip[0] }}, {{ zip[1] }}<hr />
+        {% endfor #}
+
+
         <div class="stat analytics span_3 shape_3x3">
             <h1>Sessions</h1>
             <h2 class="counter">{{ analytics_overview[0]['sessions'] }}</h2>
@@ -47,14 +53,8 @@
 
         <div class="stat analytics span_9 shape_9x3">
             <div class="sparkline" id="analytic_spark"></div>
-            <script>
-                analytic_spark = google.visualization.arrayToDataTable([
-                    ['DateTime', 'Page Views'],
-                    {% for data in analytics_overview %}[ new Date({{ data['date'] }}*1000), {{ data['sessions'] }}],
-                    {% endfor %}
-                ]);
-            </script>
         </div>
+
 
         <div class="stat span_3 shape_3x3 facebook">
 
@@ -127,19 +127,28 @@
 
 
 
-
     <script type="text/javascript">
 
+        var analytic_data =[
+        ['Day', '2013', '2014'],
+
+        {% for data in analytic_zip[1:] %}
+
+        [{{ loop.index }}, {% if data[0] == 0.0 %} undefined {% else %} {{ data[0]}} {% endif %}, {% if data[1] == 0.0 %} undefined {% else %} {{ data[1]}} {% endif %}],
+        {% endfor %}
+
+        ];
+
+        var analytic_spark =  google.visualization.arrayToDataTable(analytic_data, false);
+
+
         $(document).ready(function() {
-
-
 
             $("h1").fitText();
             $(".counter").fitText(0.3);
 
             $(".counter").each(function(i){
-                var counter = $(this),
-                    count_text = counter.text();
+                var counter = $(this), count_text = counter.text();
                 counter.text(numeral(count_text).format('0.0a'));
             });
 

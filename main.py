@@ -87,22 +87,19 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
 class DashHandler(tornado.web.RequestHandler, TemplateRendering):
     def group_data(self, incoming):
         out = OrderedDict()
-
         for cur in incoming:
             fuzzy_date = str(cur['datetime'])[:-1]
-
             try:
                 out[fuzzy_date]['details'].append(cur)
             except KeyError:
                 out[fuzzy_date] = {'total': 0, 'details': []}
                 out[fuzzy_date]['details'].append(cur)
-
             out[fuzzy_date]['total'] = out[fuzzy_date]['total'] + cur['followers']
-
         return out
 
 
     def get(self):
+
         data = {}
         sm = get_social_media_data()
         data['host'] = self.request.host
@@ -110,7 +107,9 @@ class DashHandler(tornado.web.RequestHandler, TemplateRendering):
         data['instagram'] = self.group_data(sm.find({"service": 'instagram'}).sort("datetime", -1).limit(500))
         data['twitter'] = self.group_data(sm.find({"service": 'twitter'}).sort("datetime", -1).limit(500))
         data['pinterest'] = self.group_data(sm.find({"service": 'pinterest'}).sort("datetime", -1).limit(500))
-        data['analytics_overview'] = sm.find({"service": 'analytic_overview', "date": {"$gt": 1356998400}}).sort("date", -1).limit(730)
+        data['analytics_overview'] = list(sm.find({"service": 'analytic_overview', "date": {"$gt": 1356998400}}).sort("date", -1).limit(730))
+        data['analytic_zip'] = analytic_fetcher.analytic_zipper(data['analytics_overview'])
+
         content = self.render_template('dash.html', data)
         self.write(content)
 
