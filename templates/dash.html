@@ -131,38 +131,29 @@
 
         var analytic_data =[
         ['Day', '2013', '2014'],
-
         {% for data in analytic_zip[1:] %}
-
-        [{{ loop.index }}, {% if data[0] == 0.0 %} undefined {% else %} {{ data[0]}} {% endif %}, {% if data[1] == 0.0 %} undefined {% else %} {{ data[1]}} {% endif %}],
+            [{{ loop.index }}, {% if data[0] == 0.0 %} undefined {% else %} {{ data[0]}} {% endif %}, {% if data[1] == 0.0 %} undefined {% else %} {{ data[1]}} {% endif %}],
         {% endfor %}
 
         ];
 
         var analytic_spark =  google.visualization.arrayToDataTable(analytic_data, false);
-
-
         $(document).ready(function() {
-
             $("h1").fitText();
             $(".counter").fitText(0.3);
-
             $(".counter").each(function(i){
                 var counter = $(this), count_text = counter.text();
                 counter.text(numeral(count_text).format('0.0a'));
             });
-
             $('.updated').each(function(i){
                 var update_timer = $(this),
                     update_text = update_timer.text();
                 update_timer.text(moment.utc(update_text, 'X').format('[Last updated] MMMM Do YYYY [at] HH:mm'));
             });
-
         });
 
         google.setOnLoadCallback(drawCharts);
         var sparkline_options = {
-
             interpolateNulls: true,
             legend: {
                 position: 'none'
@@ -192,14 +183,11 @@
             },
             backgroundColor: 'none'
         }
-
         // Draw out Google Charts
         function drawCharts() {
             var chart = new google.visualization.LineChart(document.getElementById('analytic_spark'));
             chart.draw(analytic_spark, sparkline_options);
         }
     </script>
-
     </body>
-
 </html>

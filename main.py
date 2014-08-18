@@ -33,14 +33,12 @@ def get_social_media_data():
     return db.socialmedia
 
 
-class TemplateRendering:
+class TemplateRendering(object):
 
     def render_template(self, template_name, variables):
         template_dirs = []
         template_dirs.append(path.join(path.dirname(__file__), 'templates')) # added a default for fail over.
-
         env = Environment(loader = FileSystemLoader(template_dirs))
-
         try:
             template = env.get_template(template_name)
         except TemplateNotFound:
@@ -81,6 +79,15 @@ class IndexHandler(tornado.web.RequestHandler, TemplateRendering):
         data['linkedin_spark'] = self.user_loop(config.LINKEDIN_USERS, 'linkedin')
 
         content = self.render_template('index.html', data)
+        self.write(content)
+
+
+class AnalyticsHandler(tornado.web.RequestHandler, TemplateRendering):
+
+    def get(self):
+        from analytics.analytics  import get_top_pages
+        data = {'pages':get_top_pages()}
+        content = self.render_template('googledash.html', data)
         self.write(content)
 
 
@@ -146,6 +153,7 @@ def main():
         (r'/', IndexHandler),
         (r'/dash', DashHandler),
         (r'/test', TestHandler),
+        (r'/google', AnalyticsHandler),
         (r'/assets/(.*)', tornado.web.StaticFileHandler, {'path': './assets'},),
         (r'/ws/', WebSocketHandler)
     ])
