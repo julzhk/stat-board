@@ -168,7 +168,8 @@ def main():
     sched.add_job(social_media_fetcher.pinterest_counts, 'cron', minute="*/5")
     sched.add_job(social_media_fetcher.youtube_counts, 'cron', minute="*/5")
     sched.add_job(social_media_fetcher.facebook_counts, 'cron', minute="*/1")
-    sched.add_job(social_media_fetcher.linkedin_count, 'cron', minute="*/5")
+    # todo reinstate when keys inserted 
+    # sched.add_job(social_media_fetcher.linkedin_count, 'cron', minute="*/5")
     # Google Analytics importer
     sched.add_job(analytic_fetcher.get_results, 'cron', hour="1", minute="1")
     sched.start()
