@@ -21,3 +21,4 @@ sudo pip install apscheduler
 sudo pip install Jinja2
 sudo pip install google-api-python-client
 sudo pip install numpy
+sudo easy_install --upgrade python-gflags
