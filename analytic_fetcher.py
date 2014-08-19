@@ -133,14 +133,16 @@ def table_maker(analytics):
     [['08-05', 23048, 15048], ['08-04', 23424, 15251]]
     """
 
-    output = empty( (366,0) )
+    output = empty( (366,22) )
     for ana in analytics:
         day_number = datetime.fromtimestamp(ana['date']).strftime('%j')
         year = datetime.fromtimestamp(ana['date']).strftime('%y')
         try_adding = True
         while try_adding:
             try:
-                output[day_number, year] = int(ana['sessions'])
+                if ana['sessions']:
+                    print day_number, ' ', year ,'=', int(ana['sessions'])
+                    output[day_number, year] = int(ana['sessions'])
                 try_adding = False
             except IndexError:
                 output = c_[ output, zeros(366)]
