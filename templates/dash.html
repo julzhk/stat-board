@@ -46,9 +46,11 @@
 
 
         <div class="stat analytics span_3 shape_3x3">
-            <h1>Sessions</h1>
-            <h2 class="counter">{{ analytics_overview[0]['sessions'] }}</h2>
-            <p class="updated">{{ analytics_overview[0]['date'] }}</p>
+            {% if analytics_overview %}
+                <h1>Sessions</h1>
+                <h2 class="counter">{{ analytics_overview[0]['sessions'] }}</h2>
+                <p class="updated">{{ analytics_overview[0]['date'] }}</p>
+            {% endif %}
         </div>
 
         <div class="stat analytics span_9 shape_9x3">
